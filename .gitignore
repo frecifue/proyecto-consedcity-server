@@ -2,9 +2,3 @@ node_modules/
 .env
 logs/
 
-
-/uploads/*
-!/uploads/posts/
-!/uploads/team/
-!/uploads/usuarios/
-!/uploads/usuarios/avatar/
