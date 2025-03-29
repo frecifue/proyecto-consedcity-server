@@ -11,6 +11,7 @@ const menuRoutes = require("./router/menu");
 const generalInfoRoutes = require("./router/general_information");
 const postRoutes = require("./router/post");
 const teamRoutes = require("./router/team");
+const contactRoutes = require("./router/contact");
 
 // ?? Middlewares
 app.use(express.json()); // Reemplaza body-parser.json()
@@ -30,6 +31,7 @@ app.use(`/api/${API_VERSION}`, menuRoutes);
 app.use(`/api/${API_VERSION}`, generalInfoRoutes);
 app.use(`/api/${API_VERSION}`, postRoutes);
 app.use(`/api/${API_VERSION}`, teamRoutes);
+app.use(`/api/${API_VERSION}`, contactRoutes);
 
 // ?? Mensaje de bienvenida
 app.get("/", (req, res) => {
