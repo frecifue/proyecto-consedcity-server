@@ -1,0 +1,150 @@
+const { getRepository } = require("typeorm");
+const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
+const image = require("../utils/image");
+const fs = require("fs");
+const path = require("path");
+
+async function getImageGallery(req, res){
+
+    const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
+    const response = await imageGalleryRepository.find({order: {gim_orden: "ASC"}});
+    
+    return res.status(200).send(response);
+}
+
+async function createImageGallery(req, res){
+    const { nombre, orden } = req.body;
+
+    // Validaciones de campos obligatorios
+    if (!nombre) {
+        return res.status(400).send({ msg: "nombre obligatorio" });
+    }
+    if(!req.files.imagen){
+        return res.status(400).send({ msg: "imagen obligatoria" });
+    }
+    if (!orden) {
+        return res.status(400).send({ msg: "orden obligatorio" });
+    }
+
+    try {
+        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
+
+        const newImageGallery = imageGalleryRepository.create({
+            gim_nombre: nombre.toLowerCase(),
+            gim_orden: orden,
+        });
+
+        // if(req.files.imagen){
+        newImageGallery.gim_imagen = image.getFilePath2(req.files.imagen)
+        // }
+
+        await imageGalleryRepository.save(newImageGallery);
+
+        return res.status(200).send(newImageGallery);
+    } catch (error) {
+        console.error(error);  // Agrega un log para ver detalles del error
+        return res.status(400).send({ msg: "Error al registrar imagen" });
+    }
+
+}
+
+async function updateImageGallery(req, res) {
+    const { gimId } = req.params;
+    const { nombre, orden } = req.body;
+    
+    if (!gimId) {
+        return res.status(400).send({ msg: "gimId no encontrada" });
+    }
+
+    try {
+        // Verificar si la imagen existe
+        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
+        const imageGallery = await imageGalleryRepository.findOne({ where: { gim_id: gimId } });
+
+        if (!imageGallery) {
+            return res.status(404).send({ msg: "Imagen no encontrada" });
+        }
+
+        // Actualizar los campos de la imagen si se proporcionan
+        if (nombre) imageGallery.gim_nombre = nombre.toLowerCase();
+        if (orden) imageGallery.gim_orden = orden;
+
+        // Si se proporciona una nueva imagen, actualizarlo
+        if (req.files && req.files.imagen) {
+            // Eliminar el avatar anterior si existe
+            if (imageGallery.gim_imagen) {
+                const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
+console.log(avatarPath)
+                fs.unlink(avatarPath, (err) => {
+                    if (err) {
+                        console.error("Error al eliminar la imagen anterior:", err);
+                    } else {
+                        console.log("Imagen anterior eliminado");
+                    }
+                });
+            }
+
+            // Guardar el nuevo avatar
+            imageGallery.gim_imagen = image.getFilePath2(req.files.imagen);
+        }
+
+        // Guardar los cambios
+        await imageGalleryRepository.save(imageGallery);
+        return res.status(200).send(imageGallery);
+
+    } catch (error) {
+        console.error(error);  // Agrega un log para ver detalles del error
+        return res.status(400).send({ msg: "Error al actualizar imagen" });
+    }
+}
+
+
+async function deleteImageGallery(req, res) {
+    const { gimId } = req.params;
+
+    if (!gimId) {
+        return res.status(400).send({ msg: "gimId no encontrada" });
+    }
+
+    try {
+        // Verificar si la imagen existe
+        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
+        const imageGallery = await imageGalleryRepository.findOne({ where: { gim_id: gimId } });
+
+        if (!imageGallery) {
+            return res.status(404).send({ msg: "Imagen no encontrada" });
+        }
+
+        // Verificar si la imgen tiene un file y eliminar el archivo
+        if (imageGallery.gim_imagen) {
+            // Obtener la ruta relativa del avatar
+            const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
+
+            console.log("Intentando eliminar el archivo en: ", avatarPath);
+
+            // Eliminar el archivo de avatar
+            fs.unlink(avatarPath, (err) => {
+                if (err) {
+                    console.error("Error al eliminar la imagen:", err);
+                } else {
+                    console.log("Imagen eliminado exitosamente");
+                }
+            });
+        }
+
+        // Eliminar la imagen
+        await imageGalleryRepository.remove(imageGallery); // Usar el método remove del repositorio
+
+        return res.status(200).send({ msg: "Imagen eliminado exitosamente" });
+    } catch (error) {
+        console.error(error);  // Agrega un log para ver detalles del error
+        return res.status(400).send({ msg: "Error al eliminar imagen", error: error.message });
+    }
+}
+
+module.exports = {
+    getImageGallery,
+    createImageGallery,
+    updateImageGallery,
+    deleteImageGallery,
+};

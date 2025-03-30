@@ -35,17 +35,17 @@ async function contact(req, res) {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: process.env.NODEMAILER_EMAIL_USER,
+            pass: process.env.NODEMAILER_EMAIL_PASS,
         },
     });
 
     try {
         // Configuración del correo
         const mailOptions = {
-            from: `Web Consedcity <${process.env.EMAIL_USER}>`, // Usar tu propio correo
+            from: `Web Consedcity <${process.env.NODEMAILER_EMAIL_USER}>`, // Usar tu propio correo
             replyTo: email_contacto, // Permitir respuestas al remitente real
-            to: process.env.EMAIL_USER,
+            to: process.env.NODEMAILER_EMAIL_USER,
             subject: `Web Consedcity - Mensaje de contacto de: ${nombre_contacto}`,
             text: `
                 Nombre: ${nombre_contacto}
