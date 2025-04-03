@@ -24,7 +24,10 @@ async function getMenus(req, res){
         if (isNaN(isActive)) {
             return res.status(400).send({ error: "El parámetro 'activo' debe ser 0 o 1" });
         }
-        response = await menuRepository.find({where: { men_activo : isActive}});
+        response = await menuRepository.find({
+            where: { men_activo: isActive },   // Filtramos los menús activos
+            order: { men_orden: 'ASC' },   // Ordenamos por men_orden en orden ascendente
+          });
     }
 
     return res.status(200).send(response);

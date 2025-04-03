@@ -10,7 +10,7 @@ async function getTeams(req, res){
 
     const teamRepository = getRepository(EquipoEntity);
 
-    response = await teamRepository.find();
+    response = await teamRepository.find({order: {equ_orden: "ASC"}});
    
     return res.status(200).send(response);
 
@@ -80,6 +80,7 @@ async function updateTeam(req, res) {
         // Actualizar los campos del equipo si se proporcionan
         if (nombre) equipo.equ_nombre = nombre;
         if (descripcion) equipo.equ_descripcion = descripcion;
+        if (orden) equipo.equ_orden = orden;
 
         // Si se proporciona un nuevo avatar, actualizarlo
         if (req.files && req.files.foto_perfil) {

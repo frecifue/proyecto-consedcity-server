@@ -54,7 +54,7 @@ async function getUsers(req, res){
 }
 
 async function createUser(req, res){
-    const { nombres, primer_apellido, email, password, rol } = req.body;
+    const { nombres, primer_apellido, segundo_apellido, email, password, rol } = req.body;
     //console.log(req.body);
 
 
@@ -92,12 +92,13 @@ async function createUser(req, res){
         const hashPassword = bcrypt.hashSync(password, salt);
 
         const newUser = userRepository.create({
-            usu_nombres: nombres.toLowerCase(),
-            usu_primer_apellido: primer_apellido.toLowerCase(),
-            usu_email: email.toLowerCase(),
-            usu_rol: rol,
-            usu_activo: 0,
-            usu_password: hashPassword,
+            usu_nombres         : nombres.toLowerCase(),
+            usu_primer_apellido : primer_apellido.toLowerCase(),
+            usu_segundo_apellido: segundo_apellido.toLowerCase(),
+            usu_email           : email.toLowerCase(),
+            usu_rol             : rol,
+            usu_activo          : 0,
+            usu_password        : hashPassword,
         });
 
         if(req.files.avatar){
@@ -150,15 +151,9 @@ async function updateUser(req, res) {
         if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido.toLowerCase();
         if (rol) user.usu_rol = rol;
     
-        if (activo === "true") {
+        if (activo === "true" || activo === 1) {
             user.usu_activo = 1;
-        } else if (activo === "false") {
-            user.usu_activo = 0;
-        } else {
-            user.usu_activo = parseInt(activo, 10);
-        }
-    
-        if (isNaN(user.usu_activo) || (user.usu_activo !== 1 && user.usu_activo !== 0)) {
+        } else if (activo === "false" || activo === 0) {
             user.usu_activo = 0;
         }
     
