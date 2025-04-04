@@ -2,11 +2,17 @@ const { getRepository } = require("typeorm");
 const { UsuarioEntity } = require("../entities/usuario");  // Importar el modelo User con TypeORM
 const jwt = require("../utils/jwt");
 const bcrypt = require("bcryptjs");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 // const userRepository = getRepository(UsuarioEntity);
 
 async function register(req, res) {
-    const { nombres, primer_apellido, email, password } = req.body;
+    let { nombres, primer_apellido, email, password } = req.body;
+
+    nombres = trimLowerCase(nombres)
+    primer_apellido = trimLowerCase(primer_apellido)
+    email = trimLowerCase(email)
+    password = password.trim()
 
     // Validaciones de campos obligatorios
     if (!nombres) {
@@ -27,7 +33,7 @@ async function register(req, res) {
         const userRepository = getRepository(UsuarioEntity);
 
         // Verificar si el email ya existe
-        const existingUser = await userRepository.findOne({ where: { usu_email: email.toLowerCase() } });
+        const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
             return res.status(400).send({ msg: "El email ya está registrado" });
@@ -38,9 +44,9 @@ async function register(req, res) {
         const hashPassword = bcrypt.hashSync(password, salt);
 
         const newUser = userRepository.create({
-            usu_nombres: nombres.toLowerCase(),
-            usu_primer_apellido: primer_apellido.toLowerCase(),
-            usu_email: email.toLowerCase(),
+            usu_nombres: nombres,
+            usu_primer_apellido: primer_apellido,
+            usu_email: email,
             usu_rol: "colaborador",
             usu_activo: false,
             usu_password: hashPassword,
@@ -69,7 +75,7 @@ async function login(req, res) {
     try {
         // Verificar si el email ya existe usando TypeORM
         const userRepository = getRepository(UsuarioEntity);
-        const userStore = await userRepository.findOne({ where: { usu_email: email.toLowerCase() } });
+        const userStore = await userRepository.findOne({ where: { usu_email: email } });
 
         if (!userStore) {
             return res.status(400).send({ msg: "El email no existe" });

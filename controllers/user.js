@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 async function getMe(req, res){
     const {usu_id} = req.user;
@@ -54,11 +55,14 @@ async function getUsers(req, res){
 }
 
 async function createUser(req, res){
-    const { nombres, primer_apellido, segundo_apellido, email, password, rol } = req.body;
-    //console.log(req.body);
-
-
-    // return res.status(200).send({msg: 'ok'});
+    let { nombres, primer_apellido, segundo_apellido, email, password, rol } = req.body;
+    
+    nombres = trimLowerCase(nombres)
+    primer_apellido = trimLowerCase(primer_apellido)
+    segundo_apellido = trimLowerCase(segundo_apellido)
+    email = trimLowerCase(email)
+    password = password.trim()
+    rol = trimLowerCase(rol)
 
     // Validaciones de campos obligatorios
     if (!nombres) {
@@ -81,7 +85,7 @@ async function createUser(req, res){
         // Verificar si el email ya existe
         const userRepository = getRepository(UsuarioEntity);
         // const existingUser = await userRepository.findOne({ email: email.toLowerCase() });
-        const existingUser = await userRepository.findOne({ where: { usu_email: email.toLowerCase() } });
+        const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
             return res.status(400).send({ msg: "El email ya está registrado" });
@@ -92,10 +96,10 @@ async function createUser(req, res){
         const hashPassword = bcrypt.hashSync(password, salt);
 
         const newUser = userRepository.create({
-            usu_nombres         : nombres.toLowerCase(),
-            usu_primer_apellido : primer_apellido.toLowerCase(),
-            usu_segundo_apellido: segundo_apellido.toLowerCase(),
-            usu_email           : email.toLowerCase(),
+            usu_nombres         : nombres,
+            usu_primer_apellido : primer_apellido,
+            usu_segundo_apellido: segundo_apellido,
+            usu_email           : email,
             usu_rol             : rol,
             usu_activo          : 0,
             usu_password        : hashPassword,
@@ -119,12 +123,18 @@ async function createUser(req, res){
 
 async function updateUser(req, res) {
     const { userId } = req.params;
-    console.log(userId);
-    const { nombres, primer_apellido, segundo_apellido, email, password, rol, activo } = req.body;
+    let { nombres, primer_apellido, segundo_apellido, email, password, rol, activo } = req.body;
     
     if (!userId) {
         return res.status(400).send({ msg: "userId no encontrado" });
     }
+
+    nombres = trimLowerCase(nombres)
+    primer_apellido = trimLowerCase(primer_apellido)
+    segundo_apellido = trimLowerCase(segundo_apellido)
+    email = trimLowerCase(email)
+    password = password.trim()
+    rol = trimLowerCase(rol)
 
     try {
         // Verificar si el usuario existe
@@ -138,17 +148,17 @@ async function updateUser(req, res) {
         // Verificar si se proporciona un nuevo email y si ya está registrado
         if (email && email !== user.usu_email) {
             // Verificar si el nuevo email ya está registrado
-            const existingUser = await userRepository.findOne({ where: { usu_email: email.toLowerCase() } });
+            const existingUser = await userRepository.findOne({ where: { usu_email: email } });
             if (existingUser) {
                 return res.status(400).send({ msg: "El email ya está registrado" });
             }
-            user.usu_email = email.toLowerCase();
+            user.usu_email = email;
         }
 
         // Actualizar los campos del usuario si se proporcionan
-        if (nombres) user.usu_nombres = nombres.toLowerCase();
-        if (primer_apellido) user.usu_primer_apellido = primer_apellido.toLowerCase();
-        if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido.toLowerCase();
+        if (nombres) user.usu_nombres = nombres;
+        if (primer_apellido) user.usu_primer_apellido = primer_apellido;
+        if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido;
         if (rol) user.usu_rol = rol;
     
         if (activo === "true" || activo === 1) {

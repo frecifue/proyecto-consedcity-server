@@ -17,7 +17,11 @@ async function getTeams(req, res){
 }
 
 async function createTeam(req, res){
-    const { nombre, descripcion, orden } = req.body;
+    let { nombre, descripcion, orden } = req.body;
+
+    nombre = (nombre || "").trim();
+    descripcion = (descripcion || "").trim();
+    orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
     if (!nombre) {
@@ -29,7 +33,7 @@ async function createTeam(req, res){
     if (!descripcion) {
         return res.status(400).send({ msg: "descripcion obligatoria" });
     }
-    if (!orden) {
+    if (isNaN(orden)) {
         return res.status(400).send({ msg: "orden obligatorio" });
     }
 
@@ -61,12 +65,15 @@ async function createTeam(req, res){
 
 async function updateTeam(req, res) {
     const { equId } = req.params;
-    
-    const { nombre, descripcion, orden } = req.body;
+    let { nombre, descripcion, orden } = req.body;
     
     if (!equId) {
         return res.status(400).send({ msg: "equId no encontrado" });
     }
+
+    nombre = (nombre || "").trim();
+    descripcion = (descripcion || "").trim();
+    orden = parseInt(orden);
 
     try {
         // Verificar si el equipo existe
@@ -80,7 +87,7 @@ async function updateTeam(req, res) {
         // Actualizar los campos del equipo si se proporcionan
         if (nombre) equipo.equ_nombre = nombre;
         if (descripcion) equipo.equ_descripcion = descripcion;
-        if (orden) equipo.equ_orden = orden;
+        if (!isNaN(orden)) equipo.equ_orden = orden;
 
         // Si se proporciona un nuevo avatar, actualizarlo
         if (req.files && req.files.foto_perfil) {

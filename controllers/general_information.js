@@ -2,6 +2,7 @@ const { getRepository } = require("typeorm");
 const { InformacionGeneralEntity } = require("../entities/informacion_general");  // Importar el modelo User con TypeORM
 const fs = require("fs");
 const path = require("path");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 async function getGeneralInformation(req, res){
     const generalInfoRepository = getRepository(InformacionGeneralEntity);
@@ -13,8 +14,16 @@ async function getGeneralInformation(req, res){
 }
 
 async function createGeneralInformation(req, res){
-    const { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
-    
+    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
+
+    quienes_somos = (quienes_somos || "").trim();
+    mision = (mision || "").trim();
+    vision = (vision || "").trim();
+    nuestro_trabajo = (nuestro_trabajo || "").trim();
+    difusion = (difusion || "").trim();
+    formacion = (formacion || "").trim();
+    investigacion = (investigacion || "").trim();
+
 
     try {
         // Verificar si el email ya existe
@@ -61,11 +70,19 @@ async function createGeneralInformation(req, res){
 
 async function updateGeneralInformation(req, res) {
     const { ingId } = req.params;
-    const { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
+    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
     
     if (!ingId) {
         return res.status(400).send({ msg: "ingId no encontrado" });
     }
+
+    quienes_somos = (quienes_somos || "").trim();
+    mision = (mision || "").trim();
+    vision = (vision || "").trim();
+    nuestro_trabajo = (nuestro_trabajo || "").trim();
+    difusion = (difusion || "").trim();
+    formacion = (formacion || "").trim();
+    investigacion = (investigacion || "").trim();
 
     try {
         // Verificar si el usuario existe

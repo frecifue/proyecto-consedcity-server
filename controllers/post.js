@@ -3,6 +3,7 @@ const { PostEntity } = require("../entities/post");  // Importar el modelo User 
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 
 async function getPosts(req, res) {
@@ -58,11 +59,11 @@ async function getPost(req, res) {
 
 
 async function createPost(req, res){
-    const { titulo, contenido, path_post } = req.body;
-    //console.log(req.body);
-
-
-    // return res.status(200).send({msg: 'ok'});
+    let { titulo, contenido, path_post } = req.body;
+    
+    titulo = (titulo || "").trim();
+    contenido = (contenido || "").trim();
+    path_post = trimLowerCase(path_post);
 
     // Validaciones de campos obligatorios
     if (!titulo) {
@@ -82,7 +83,7 @@ async function createPost(req, res){
         // Verificar si el path ya existe
         const postRepository = getRepository(PostEntity);
        
-        const existingPost = await postRepository.findOne({ where: { pos_path: path_post.toLowerCase() } });
+        const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
 
         if (existingPost) {
             return res.status(400).send({ msg: "La ruta ya está registrada" });
@@ -112,12 +113,15 @@ async function createPost(req, res){
 
 async function updatePost(req, res) {
     const { posId } = req.params;
-    
-    const { titulo, contenido, path_post } = req.body;
+    let { titulo, contenido, path_post } = req.body;
     
     if (!posId) {
         return res.status(400).send({ msg: "posId no encontrado" });
     }
+
+    titulo = (titulo || "").trim();
+    contenido = (contenido || "").trim();
+    path_post = trimLowerCase(path_post);
 
     try {
         // Verificar si el post existe
@@ -131,7 +135,7 @@ async function updatePost(req, res) {
         // Verificar si se proporciona un nuevo path y si ya está registrado
         if (path_post && path_post !== post.pos_path) {
             // Verificar si el nuevo email ya está registrado
-            const existingPost = await postRepository.findOne({ where: { pos_path: path_post.toLowerCase() } });
+            const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
             if (existingPost) {
                 return res.status(400).send({ msg: "La ruta ya está registrada" });
             }

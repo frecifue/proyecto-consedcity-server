@@ -2,6 +2,7 @@ const { getRepository } = require("typeorm");
 const { MenuEntity } = require("../entities/menu");  // Importar el modelo User con TypeORM
 const fs = require("fs");
 const path = require("path");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 async function getMenus(req, res){
     const {activo} = req.query;
@@ -35,9 +36,11 @@ async function getMenus(req, res){
 }
 
 async function createMenu(req, res){
-    const { titulo, path, orden, activo } = req.body;
-    // console.log(req.body);
-
+    let { titulo, path, orden, activo } = req.body;
+    
+    titulo = (titulo || "").trim();
+    path = trimLowerCase(path)
+    orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
     if (!titulo) {
@@ -46,7 +49,7 @@ async function createMenu(req, res){
     if (!path) {
         return res.status(400).send({ msg: "ruta obligatoria" });
     }
-    if (!orden) {
+    if (isNaN(orden)) {
         return res.status(400).send({ msg: "orden obligatorio" });
     }
 
@@ -54,7 +57,7 @@ async function createMenu(req, res){
         // Verificar si el email ya existe
         const menuRepository = getRepository(MenuEntity);
         // const existingUser = await menuRepository.findOne({ email: email.toLowerCase() });
-        const existingMenu = await menuRepository.findOne({ where: { men_path: path.toLowerCase() } });
+        const existingMenu = await menuRepository.findOne({ where: { men_path: path } });
 
         if (existingMenu) {
             return res.status(400).send({ msg: "El menú con esa ruta ya existe" });
@@ -80,11 +83,15 @@ async function createMenu(req, res){
 
 async function updateMenu(req, res) {
     const { menId } = req.params;
-    const { titulo, path, orden, activo } = req.body;
+    let { titulo, path, orden, activo } = req.body;
     
     if (!menId) {
         return res.status(400).send({ msg: "menId no encontrado" });
     }
+
+    titulo = (titulo || "").trim();
+    path = trimLowerCase(path)
+    orden = parseInt(orden);
 
     try {
         // Verificar si el menu existe
@@ -98,7 +105,7 @@ async function updateMenu(req, res) {
         // Verificar si se proporciona un nuevo email y si ya está registrado
         if (path && path !== menu.men_path) {
             // Verificar si el path ya está registrado
-            const existingMenu = await menuRepository.findOne({ where: { men_path: path.toLowerCase() } });
+            const existingMenu = await menuRepository.findOne({ where: { men_path: path } });
 
             if (existingMenu) {
                 return res.status(400).send({ msg: "El menú con esa ruta ya existe" });
@@ -109,7 +116,7 @@ async function updateMenu(req, res) {
 
         // Actualizar los campos del menu si se proporcionan
         if (titulo) menu.men_titulo = titulo;
-        if (orden) menu.men_orden = orden;
+        if (!isNaN(orden)) menu.men_orden = orden;
         if (activo === "true" || activo === true) {
             menu.men_activo = 1;
         } else if (activo === "false" || activo === false) {

@@ -3,6 +3,7 @@ const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes");  // 
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
+const { trimLowerCase } = require("../utils/cleanInput");
 
 async function getImageGallery(req, res){
 
@@ -13,7 +14,10 @@ async function getImageGallery(req, res){
 }
 
 async function createImageGallery(req, res){
-    const { nombre, orden } = req.body;
+    let { nombre, orden } = req.body;
+
+    nombre = trimLowerCase(nombre)
+    orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
     if (!nombre) {
@@ -22,7 +26,7 @@ async function createImageGallery(req, res){
     if(!req.files.imagen){
         return res.status(400).send({ msg: "imagen obligatoria" });
     }
-    if (!orden) {
+    if (isNaN(orden)) {
         return res.status(400).send({ msg: "orden obligatorio" });
     }
 
@@ -30,7 +34,7 @@ async function createImageGallery(req, res){
         const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
 
         const newImageGallery = imageGalleryRepository.create({
-            gim_nombre: nombre.toLowerCase(),
+            gim_nombre: nombre,
             gim_orden: orden,
         });
 
@@ -50,11 +54,14 @@ async function createImageGallery(req, res){
 
 async function updateImageGallery(req, res) {
     const { gimId } = req.params;
-    const { nombre, orden } = req.body;
+    let { nombre, orden } = req.body;
     
     if (!gimId) {
         return res.status(400).send({ msg: "gimId no encontrada" });
     }
+
+    nombre = trimLowerCase(nombre)
+    orden = parseInt(orden);
 
     try {
         // Verificar si la imagen existe
@@ -67,14 +74,14 @@ async function updateImageGallery(req, res) {
 
         // Actualizar los campos de la imagen si se proporcionan
         if (nombre) imageGallery.gim_nombre = nombre.toLowerCase();
-        if (orden) imageGallery.gim_orden = orden;
+        if (!isNaN(orden)) imageGallery.gim_orden = orden;
 
         // Si se proporciona una nueva imagen, actualizarlo
         if (req.files && req.files.imagen) {
             // Eliminar el avatar anterior si existe
             if (imageGallery.gim_imagen) {
                 const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
-console.log(avatarPath)
+
                 fs.unlink(avatarPath, (err) => {
                     if (err) {
                         console.error("Error al eliminar la imagen anterior:", err);
