@@ -1,13 +1,14 @@
 const { EntitySchema } = require("typeorm");
+const { DocumentEntity } = require("./documentos");
 
 const PostEntity = new EntitySchema({
-    name: "PostEntity", // El nombre de la entidad
-    tableName: "posts", // El nombre de la tabla en la base de datos
+    name: "PostEntity",
+    tableName: "posts",
     columns: {
         pos_id: {
             type: "int",
             primary: true,
-            generated: true, // Autoincremental
+            generated: true,
         },
         pos_titulo: {
             type: "varchar",
@@ -32,6 +33,24 @@ const PostEntity = new EntitySchema({
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
+    },
+    relations: {
+        documentos: {
+            target: "DocumentEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "posts_documentos", // puedes cambiar el nombre si quieres
+                joinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+                inverseJoinColumn: {
+                    name: "doc_id",
+                    referencedColumnName: "doc_id",
+                },
+            },
+            cascade: true,
         },
     },
 });

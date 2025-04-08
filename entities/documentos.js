@@ -14,12 +14,12 @@ const DocumentEntity = new EntitySchema({
             length: 255,
         },
         doc_descripcion: {
-            type: "text", // mejor si puede ser más larga
+            type: "text",
         },
         doc_path: {
             type: "varchar",
-            length: 500, // por si usas rutas largas o URLs
-            unique: true, // ?? Esto asegura que no se repita
+            length: 500,
+            unique: true,
         },
         doc_documento: {
             type: "varchar",
@@ -36,6 +36,13 @@ const DocumentEntity = new EntitySchema({
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
+    },
+    relations: {
+        posts: {
+            target: "PostEntity",
+            type: "many-to-many",
+            mappedBy: "documentos",
         },
     },
 });

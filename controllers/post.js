@@ -1,5 +1,6 @@
-const { getRepository } = require("typeorm");
+const { getRepository, In } = require("typeorm");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
+const { DocumentEntity } = require("../entities/documentos"); 
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
@@ -24,6 +25,7 @@ async function getPosts(req, res) {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
+            relations: ["documentos"],
         });
 
         return res.status(200).send({
@@ -44,7 +46,10 @@ async function getPost(req, res) {
     const postRepository = getRepository(PostEntity);
 
     try {
-        const existingPost = await postRepository.findOne({ where: { pos_path: path.toLowerCase() } });
+        const existingPost = await postRepository.findOne({ 
+            where: { pos_path: path.toLowerCase() },
+            relations: ["documentos"], // Incluir los documentos asociados al post
+        });
 
         if(!existingPost){
             return res.status(400).send({ msg: "No se ha encontrado ninguna noticia" });
@@ -222,10 +227,62 @@ async function deletePost(req, res) {
     }
 }
 
+async function addDocuments(req, res) {
+    const { posId } = req.params;
+    const { documentsIds } = req.body;
+
+    if (!Array.isArray(documentsIds)) {
+        return res.status(400).json({ msg: "El cuerpo debe contener un arreglo llamado documentsIds" });
+    }
+
+    if (!posId) {
+        return res.status(400).send({ msg: "posId no encontrado" });
+    }
+
+    try {
+        const postRepository = getRepository(PostEntity);
+        const documentRepository = getRepository(DocumentEntity);
+
+        const post = await postRepository.findOne({
+            where: { pos_id: posId },
+            relations: ["documentos"],
+        });
+
+        if (!post) {
+            return res.status(404).json({ msg: "Post no encontrado" });
+        }
+
+        let nuevosDocumentos = [];
+
+        if (documentsIds.length > 0) {
+            nuevosDocumentos = await documentRepository.find({
+                where: {
+                    doc_id: In(documentsIds),
+                },
+            });
+        }
+
+        // Reemplazar las relaciones del post
+        post.documentos = nuevosDocumentos;
+
+        await postRepository.save(post);
+
+        return res.status(200).json({
+            msg: "Relaciones actualizadas correctamente",
+            documentos: nuevosDocumentos,
+        });
+    } catch (error) {
+        console.error("Error al actualizar documentos del post:", error);
+        return res.status(500).json({ msg: "Error interno", error: error.message });
+    }
+}
+
+
 module.exports = {
     getPost,
     getPosts,
     createPost,
     updatePost,
     deletePost,
+    addDocuments,
 };
