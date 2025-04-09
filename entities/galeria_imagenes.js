@@ -29,6 +29,13 @@ const GalleriaImagenesEntity = new EntitySchema({
             onUpdate: "CURRENT_TIMESTAMP",
         },
     },
+    relations: {
+        posts: {
+            target: "PostEntity",
+            type: "many-to-many",
+            mappedBy: "imagenes",
+        },
+    },
 });
 
 module.exports = {

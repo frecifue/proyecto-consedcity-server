@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { DocumentEntity } = require("./documentos");
+const { GalleriaImagenesEntity } = require("./galeria_imagenes");
 
 const PostEntity = new EntitySchema({
     name: "PostEntity",
@@ -48,6 +49,22 @@ const PostEntity = new EntitySchema({
                 inverseJoinColumn: {
                     name: "doc_id",
                     referencedColumnName: "doc_id",
+                },
+            },
+            cascade: true,
+        },
+        imagenes: {
+            target: "GalleriaImagenesEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "posts_imagenes",
+                joinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+                inverseJoinColumn: {
+                    name: "gim_id",
+                    referencedColumnName: "gim_id",
                 },
             },
             cascade: true,

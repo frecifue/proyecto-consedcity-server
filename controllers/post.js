@@ -1,6 +1,7 @@
 const { getRepository, In } = require("typeorm");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
+const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
@@ -25,7 +26,7 @@ async function getPosts(req, res) {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            relations: ["documentos"],
+            relations: ["documentos", "imagenes"],
         });
 
         return res.status(200).send({
@@ -48,7 +49,7 @@ async function getPost(req, res) {
     try {
         const existingPost = await postRepository.findOne({ 
             where: { pos_path: path.toLowerCase() },
-            relations: ["documentos"], // Incluir los documentos asociados al post
+            relations: ["documentos", "imagenes"],
         });
 
         if(!existingPost){
@@ -277,6 +278,55 @@ async function addDocuments(req, res) {
     }
 }
 
+async function addImages(req, res) {
+    const { posId } = req.params;
+    const { imagesIds } = req.body;
+
+    if (!Array.isArray(imagesIds)) {
+        return res.status(400).json({ msg: "El cuerpo debe contener un arreglo llamado imagesIds" });
+    }
+
+    if (!posId) {
+        return res.status(400).send({ msg: "posId no encontrado" });
+    }
+
+    try {
+        const postRepository = getRepository(PostEntity);
+        const imgGalleryRepository = getRepository(GalleriaImagenesEntity);
+
+        const post = await postRepository.findOne({
+            where: { pos_id: posId },
+            relations: ["imagenes"],
+        });
+
+        if (!post) {
+            return res.status(404).json({ msg: "Post no encontrado" });
+        }
+
+        let nuevasImagenes = [];
+
+        if (imagesIds.length > 0) {
+            nuevasImagenes = await imgGalleryRepository.find({
+                where: {
+                    gim_id: In(imagesIds),
+                },
+            });
+        }
+
+        // Reemplazar las relaciones del post
+        post.imagenes = nuevasImagenes;
+
+        await postRepository.save(post);
+
+        return res.status(200).json({
+            msg: "Relaciones actualizadas correctamente",
+            imagenes: nuevasImagenes,
+        });
+    } catch (error) {
+        console.error("Error al actualizar imagenes del post:", error);
+        return res.status(500).json({ msg: "Error interno", error: error.message });
+    }
+}
 
 module.exports = {
     getPost,
@@ -285,4 +335,5 @@ module.exports = {
     updatePost,
     deletePost,
     addDocuments,
+    addImages,
 };
