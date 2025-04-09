@@ -5,6 +5,39 @@ const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
+async function getImagesGallery(req, res) {
+    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
+    const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
+
+    try {
+        const pageNumber = parseInt(page, 10); // Convertir a número
+        const limitNumber = parseInt(limit, 10); // Convertir a número
+
+        if (isNaN(pageNumber) || isNaN(limitNumber)) {
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+        }
+
+        const skip = (pageNumber - 1) * limitNumber; // Cálculo correcto
+
+        const [images, total] = await imageGalleryRepository.findAndCount({
+            skip,
+            take: limitNumber,
+            order: { gim_created_at: "DESC" },
+        });
+
+        return res.status(200).send({
+            total,
+            page: pageNumber,
+            totalPages: Math.ceil(total / limitNumber),
+            limit: limitNumber,
+            images,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(400).send({ msg: "Error al obtener la galeria de imágenes" });
+    }
+}
+
 async function getImageGallery(req, res){
 
     const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
@@ -150,6 +183,7 @@ async function deleteImageGallery(req, res) {
 }
 
 module.exports = {
+    getImagesGallery,
     getImageGallery,
     createImageGallery,
     updateImageGallery,

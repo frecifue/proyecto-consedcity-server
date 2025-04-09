@@ -6,6 +6,7 @@ const multiparty = require("connect-multiparty");
 const md_upload = multiparty({uploadDir: "./uploads/galeria_imagenes"})
 const api = express.Router();
 
+api.get("/images_gallery", ImageGalleryController.getImagesGallery);
 api.get("/image_gallery", ImageGalleryController.getImageGallery);
 api.post("/image_gallery", [md_auth.asureAuth, md_upload], ImageGalleryController.createImageGallery);
 api.patch("/image_gallery/:gimId", [md_auth.asureAuth, md_upload], ImageGalleryController.updateImageGallery);
