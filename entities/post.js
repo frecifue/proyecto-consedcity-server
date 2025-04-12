@@ -51,7 +51,7 @@ const PostEntity = new EntitySchema({
                     referencedColumnName: "doc_id",
                 },
             },
-            cascade: true,
+            //cascade: true,
         },
         imagenes: {
             target: "GalleriaImagenesEntity",
@@ -67,7 +67,7 @@ const PostEntity = new EntitySchema({
                     referencedColumnName: "gim_id",
                 },
             },
-            cascade: true,
+            //cascade: true,
         },
     },
 });

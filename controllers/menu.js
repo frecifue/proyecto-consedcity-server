@@ -23,10 +23,10 @@ async function getMenus(req, res){
         }
 
         if (isNaN(isActive)) {
-            return res.status(400).send({ error: "El parámetro 'activo' debe ser 0 o 1" });
+            return res.status(400).send({ error: "El parÃ¡metro 'activo' debe ser 0 o 1" });
         }
         response = await menuRepository.find({
-            where: { men_activo: isActive },   // Filtramos los menús activos
+            where: { men_activo: isActive },   // Filtramos los menÃºs activos
             order: { men_orden: 'ASC' },   // Ordenamos por men_orden en orden ascendente
           });
     }
@@ -60,7 +60,7 @@ async function createMenu(req, res){
         const existingMenu = await menuRepository.findOne({ where: { men_path: path } });
 
         if (existingMenu) {
-            return res.status(400).send({ msg: "El menú con esa ruta ya existe" });
+            return res.status(400).send({ msg: "El menÃº con esa ruta ya existe" });
         }
 
         // Crear el nuevo menu
@@ -99,16 +99,16 @@ async function updateMenu(req, res) {
         const menu = await menuRepository.findOne({ where: { men_id: menId } });
 
         if (!menu) {
-            return res.status(404).send({ msg: "Menú no encontrado" });
+            return res.status(404).send({ msg: "MenÃº no encontrado" });
         }
 
-        // Verificar si se proporciona un nuevo email y si ya está registrado
+        // Verificar si se proporciona un nuevo email y si ya estÃ¡ registrado
         if (path && path !== menu.men_path) {
-            // Verificar si el path ya está registrado
+            // Verificar si el path ya estÃ¡ registrado
             const existingMenu = await menuRepository.findOne({ where: { men_path: path } });
 
             if (existingMenu) {
-                return res.status(400).send({ msg: "El menú con esa ruta ya existe" });
+                return res.status(400).send({ msg: "El menÃº con esa ruta ya existe" });
             }
 
             menu.men_path = path.toLowerCase();
@@ -137,7 +137,7 @@ async function updateMenu(req, res) {
 
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
-        return res.status(400).send({ msg: "Error al actualizar menú" });
+        return res.status(400).send({ msg: "Error al actualizar menÃº" });
     }
 }
 
@@ -155,16 +155,16 @@ async function deleteMenu(req, res) {
         const menu = await menuRepository.findOne({ where: { men_id: menId } });
 
         if (!menu) {
-            return res.status(404).send({ msg: "Menú no encontrado" });
+            return res.status(404).send({ msg: "MenÃº no encontrado" });
         }
 
         // Eliminar el menu
         await menuRepository.remove(menu); 
 
-        return res.status(200).send({ msg: "Menú eliminado exitosamente" });
+        return res.status(200).send({ msg: "MenÃº eliminado exitosamente" });
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
-        return res.status(400).send({ msg: "Error al eliminar menú", error: error.message });
+        return res.status(400).send({ msg: "Error al eliminar menÃº", error: error.message });
     }
 }
 

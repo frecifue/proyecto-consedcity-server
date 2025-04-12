@@ -1,5 +1,6 @@
 const { getRepository } = require("typeorm");
-const { DocumentEntity } = require("../entities/documentos");  // Importar el modelo User con TypeORM
+const { DocumentEntity } = require("../entities/documentos");
+const { PostEntity } = require("../entities/post");
 const documentPath = require("../utils/documentPath");
 const fs = require("fs");
 const path = require("path");
@@ -188,13 +189,22 @@ async function deleteDocument(req, res) {
 
     try {
         const documentRepository = getRepository(DocumentEntity);
-        const document = await documentRepository.findOne({ where: { doc_id: docId } });
+        const postRepository = getRepository(PostEntity);
+
+        // Buscar el documento
+        const document = await documentRepository.findOne({ where: { doc_id: docId }, relations: ["posts"] });
 
         if (!document) {
             return res.status(404).send({ msg: "Documento no encontrado" });
         }
 
-        // Eliminar el archivo asociado si existe
+        // 1. Quitar el documento de todos los posts relacionados
+        for (const post of document.posts) {
+            post.documentos = post.documentos.filter(doc => doc.doc_id !== docId);
+            await postRepository.save(post); // Guardar los cambios en el post
+        }
+
+        // 2. Eliminar el archivo asociado si existe
         if (document.doc_documento) {
             const filePath = path.join(__dirname, "..", "uploads", document.doc_documento);
             console.log("Ruta del archivo a eliminar: ", filePath); // Verifica la ruta completa
@@ -208,7 +218,7 @@ async function deleteDocument(req, res) {
             }
         }
 
-        // Eliminar el documento de la base de datos
+        // 3. Eliminar el documento de la base de datos
         await documentRepository.remove(document);
 
         return res.status(200).send({ msg: "Documento eliminado correctamente" });
@@ -217,6 +227,8 @@ async function deleteDocument(req, res) {
         return res.status(400).send({ msg: "Error al eliminar el documento" });
     }
 }
+
+
 
 
 

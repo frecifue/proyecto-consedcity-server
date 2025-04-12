@@ -42,7 +42,7 @@ const DocumentEntity = new EntitySchema({
         posts: {
             target: "PostEntity",
             type: "many-to-many",
-            mappedBy: "documentos",
+            inverseSide: "documentos",
         },
     },
 });

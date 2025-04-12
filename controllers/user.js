@@ -61,7 +61,7 @@ async function createUser(req, res){
     primer_apellido = trimLowerCase(primer_apellido)
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
-    password = password.trim()
+    password = password ? password.trim() : null;
     rol = trimLowerCase(rol)
 
     // Validaciones de campos obligatorios
@@ -133,7 +133,7 @@ async function updateUser(req, res) {
     primer_apellido = trimLowerCase(primer_apellido)
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
-    password = password.trim()
+    password = password ? password.trim() : null;
     rol = trimLowerCase(rol)
 
     try {

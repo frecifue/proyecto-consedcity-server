@@ -33,7 +33,7 @@ const GalleriaImagenesEntity = new EntitySchema({
         posts: {
             target: "PostEntity",
             type: "many-to-many",
-            mappedBy: "imagenes",
+            inverseSide: "imagenes",
         },
     },
 });
