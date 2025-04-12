@@ -1,14 +1,15 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
+const imageGalleryRepository = AppDataSource.getRepository(GalleriaImagenesEntity);
+
 async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
-
+    
     try {
         const pageNumber = parseInt(page, 10); // Convertir a número
         const limitNumber = parseInt(limit, 10); // Convertir a número
@@ -40,7 +41,6 @@ async function getImagesGallery(req, res) {
 
 async function getImageGallery(req, res){
 
-    const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
     const response = await imageGalleryRepository.find({order: {gim_orden: "ASC"}});
     
     return res.status(200).send(response);
@@ -64,16 +64,13 @@ async function createImageGallery(req, res){
     }
 
     try {
-        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
-
+        
         const newImageGallery = imageGalleryRepository.create({
             gim_nombre: nombre,
             gim_orden: orden,
         });
 
-        // if(req.files.imagen){
         newImageGallery.gim_imagen = image.getFilePath2(req.files.imagen)
-        // }
 
         await imageGalleryRepository.save(newImageGallery);
 
@@ -98,7 +95,6 @@ async function updateImageGallery(req, res) {
 
     try {
         // Verificar si la imagen existe
-        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
         const imageGallery = await imageGalleryRepository.findOne({ where: { gim_id: gimId } });
 
         if (!imageGallery) {
@@ -148,7 +144,6 @@ async function deleteImageGallery(req, res) {
 
     try {
         // Verificar si la imagen existe
-        const imageGalleryRepository = getRepository(GalleriaImagenesEntity);
         const imageGallery = await imageGalleryRepository.findOne({ where: { gim_id: gimId } });
 
         if (!imageGallery) {

@@ -1,17 +1,17 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { DocumentEntity } = require("../entities/documentos");
 const { PostEntity } = require("../entities/post");
 const documentPath = require("../utils/documentPath");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
-const { log } = require("console");
 
+const documentRepository = AppDataSource.getRepository(DocumentEntity);
+const postRepository = AppDataSource.getRepository(PostEntity);
 
 async function getDocuments(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    const documentRepository = getRepository(DocumentEntity);
-
+    
     try {
         const pageNumber = parseInt(page, 10); // Convertir a número
         const limitNumber = parseInt(limit, 10); // Convertir a número
@@ -43,8 +43,7 @@ async function getDocuments(req, res) {
 
 async function getDocument(req, res) {
     let { path_doc } = req.params;
-    const documentRepository = getRepository(DocumentEntity);
-
+    
     path_doc = trimLowerCase(path_doc)
 
     try {
@@ -85,8 +84,7 @@ async function createDocument(req, res) {
     }
 
     try {
-        const documentRepository = getRepository(DocumentEntity);
-
+        
         const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
         if (existingDocument) {
             return res.status(400).send({ msg: "La ruta ya está registrada" });
@@ -127,7 +125,6 @@ async function updateDocument(req, res) {
     orden = parseInt(orden);
 
     try {
-        const documentRepository = getRepository(DocumentEntity);
         const document = await documentRepository.findOne({ where: { doc_id: docId } });
 
         if (!document) {
@@ -188,9 +185,6 @@ async function deleteDocument(req, res) {
     }
 
     try {
-        const documentRepository = getRepository(DocumentEntity);
-        const postRepository = getRepository(PostEntity);
-
         // Buscar el documento
         const document = await documentRepository.findOne({ where: { doc_id: docId }, relations: ["posts"] });
 

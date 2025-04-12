@@ -1,12 +1,10 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { InformacionGeneralEntity } = require("../entities/informacion_general");  // Importar el modelo User con TypeORM
-const fs = require("fs");
-const path = require("path");
-const { trimLowerCase } = require("../utils/cleanInput");
+
+const generalInfoRepository = AppDataSource.getRepository(InformacionGeneralEntity);
 
 async function getGeneralInformation(req, res){
-    const generalInfoRepository = getRepository(InformacionGeneralEntity);
-
+    
     response = await generalInfoRepository.find();
     
     return res.status(200).send(response);
@@ -26,8 +24,6 @@ async function createGeneralInformation(req, res){
 
 
     try {
-        // Verificar si el email ya existe
-        const generalInfoRepository = getRepository(InformacionGeneralEntity);
         
         let existingGeneralInfo = (await generalInfoRepository.find())[0];
 
@@ -85,8 +81,7 @@ async function updateGeneralInformation(req, res) {
     investigacion = (investigacion || "").trim();
 
     try {
-        // Verificar si el usuario existe
-        const generalInfoRepository = getRepository(InformacionGeneralEntity);
+        // Verificar si existe
         const generalInfo = await generalInfoRepository.findOne({ where: { ing_id: ingId } });
 
         if (!generalInfo) {
@@ -124,8 +119,6 @@ async function deleteGeneralInformation(req, res) {
 
     try {
         // Verificar si existe
-        const generalInfoRepository = getRepository(InformacionGeneralEntity);
-        
         const generalInfo = await generalInfoRepository.findOne({ where: { ing_id: ingId } });
 
         if (!generalInfo) {

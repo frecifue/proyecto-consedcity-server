@@ -1,4 +1,4 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { UsuarioEntity } = require("../entities/usuario");  // Importar el modelo User con TypeORM
 const bcrypt = require("bcryptjs");
 const image = require("../utils/image");
@@ -6,12 +6,13 @@ const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
+const userRepository = AppDataSource.getRepository(UsuarioEntity);
+
 async function getMe(req, res){
     const {usu_id} = req.user;
 
     try {
         // Verificar si el email ya existe
-        const userRepository = getRepository(UsuarioEntity);
         const existingUser = await userRepository.findOne({ where: { usu_id } });
 
         if (!existingUser) {
@@ -28,8 +29,6 @@ async function getMe(req, res){
 async function getUsers(req, res){
     const {activo} = req.query;
     let response = null;
-
-    const userRepository = getRepository(UsuarioEntity);
 
     if(activo === undefined){
         response = await userRepository.find();
@@ -83,8 +82,6 @@ async function createUser(req, res){
 
     try {
         // Verificar si el email ya existe
-        const userRepository = getRepository(UsuarioEntity);
-        // const existingUser = await userRepository.findOne({ email: email.toLowerCase() });
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
@@ -110,7 +107,6 @@ async function createUser(req, res){
         }
 
         // Guardar el nuevo usuario en la base de datos
-        // const userStorage = await newUser.save();
         await userRepository.save(newUser);
 
         return res.status(200).send(newUser);
@@ -138,7 +134,6 @@ async function updateUser(req, res) {
 
     try {
         // Verificar si el usuario existe
-        const userRepository = getRepository(UsuarioEntity);
         const user = await userRepository.findOne({ where: { usu_id: userId } });
 
         if (!user) {
@@ -192,13 +187,9 @@ async function updateUser(req, res) {
         }
 
         // Guardar los cambios
-        // const updatedUser = await user.save();
-        console.log(user);
         await userRepository.save(user);
 
         return res.status(200).send(user);
-
-        // return res.status(200).send(updatedUser);
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar usuario" });
@@ -215,8 +206,6 @@ async function deleteUser(req, res) {
 
     try {
         // Verificar si el usuario existe
-        const userRepository = getRepository(UsuarioEntity);
-        // const user = await userRepository.findOne({ where: { usu_id } });
         const user = await userRepository.findOne({ where: { usu_id: userId } });
 
         if (!user) {
@@ -241,7 +230,6 @@ async function deleteUser(req, res) {
         }
 
         // Eliminar el usuario
-        // await user.deleteOne();
         await userRepository.remove(user); // Usar el método remove del repositorio
 
         return res.status(200).send({ msg: "Usuario eliminado exitosamente" });

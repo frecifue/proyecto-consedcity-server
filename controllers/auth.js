@@ -1,10 +1,10 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { UsuarioEntity } = require("../entities/usuario");  // Importar el modelo User con TypeORM
 const jwt = require("../utils/jwt");
 const bcrypt = require("bcryptjs");
 const { trimLowerCase } = require("../utils/cleanInput");
 
-// const userRepository = getRepository(UsuarioEntity);
+const userRepository = AppDataSource.getRepository(UsuarioEntity);
 
 async function register(req, res) {
     let { nombres, primer_apellido, email, password } = req.body;
@@ -29,9 +29,7 @@ async function register(req, res) {
     }
 
     try {
-        // Obtener el repositorio de UsuarioEntity
-        const userRepository = getRepository(UsuarioEntity);
-
+        
         // Verificar si el email ya existe
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
@@ -74,7 +72,6 @@ async function login(req, res) {
 
     try {
         // Verificar si el email ya existe usando TypeORM
-        const userRepository = getRepository(UsuarioEntity);
         const userStore = await userRepository.findOne({ where: { usu_email: email } });
 
         if (!userStore) {
@@ -114,8 +111,6 @@ async function refreshAccessToken(req, res) {
     const { usu_id } = jwt.decoded(token);
 
     try {
-        // Verificar si el usuario existe usando TypeORM
-        const userRepository = getRepository(UsuarioEntity);
         const userStore = await userRepository.findOne({ where: { usu_id } });
 
         if (!userStore) {

@@ -1,14 +1,13 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { EquipoEntity } = require("../entities/equipo");  // Importar el modelo User con TypeORM
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 
+const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
 async function getTeams(req, res){
     let response = null;
-
-    const teamRepository = getRepository(EquipoEntity);
 
     response = await teamRepository.find({order: {equ_orden: "ASC"}});
    
@@ -39,8 +38,6 @@ async function createTeam(req, res){
 
     try {
         // Verificar si el path ya existe
-        const teamRepository = getRepository(EquipoEntity);
-
         const newTeam = teamRepository.create({
             equ_nombre: nombre,
             equ_descripcion: descripcion,
@@ -52,7 +49,6 @@ async function createTeam(req, res){
         }
 
         // Guardar el nuevo equipo en la base de datos
-        // const userStorage = await newTeam.save();
         await teamRepository.save(newTeam);
 
         return res.status(200).send(newTeam);
@@ -77,7 +73,6 @@ async function updateTeam(req, res) {
 
     try {
         // Verificar si el equipo existe
-        const teamRepository = getRepository(EquipoEntity);
         const equipo = await teamRepository.findOne({ where: { equ_id: equId } });
 
         if (!equipo) {
@@ -108,12 +103,9 @@ async function updateTeam(req, res) {
         }
 
         // Guardar los cambios
-        // const updatedUser = await user.save();
         await teamRepository.save(equipo);
 
         return res.status(200).send(equipo);
-
-        // return res.status(200).send(updatedUser);
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar miembro del equipo" });
@@ -130,8 +122,6 @@ async function deleteTeam(req, res) {
 
     try {
         // Verificar si el equipo existe
-        const teamRepository = getRepository(EquipoEntity);
-        // const user = await teamRepository.findOne({ where: { equ_id } });
         const equipo = await teamRepository.findOne({ where: { equ_id: equId } });
 
         if (!equipo) {

@@ -5,7 +5,7 @@ const validator = require('validator');
 async function contact(req, res) {
     let { nombre_contacto, email_contacto, mensaje_contacto } = req.body;
 
-    // Aplicar trim y sanitizaciÃ³n
+    // Aplicar trim y sanitización
     nombre_contacto = sanitizeHtml(nombre_contacto?.trim());
     email_contacto = sanitizeHtml(email_contacto?.trim());
     mensaje_contacto = sanitizeHtml(mensaje_contacto?.trim());

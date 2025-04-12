@@ -1,4 +1,5 @@
-const { getRepository, In } = require("typeorm");
+const { In } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
 const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
@@ -7,10 +8,12 @@ const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
+const postRepository = AppDataSource.getRepository(PostEntity);
+const imgGalleryRepository = AppDataSource.getRepository(GalleriaImagenesEntity);
+const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getPosts(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    const postRepository = getRepository(PostEntity);
 
     try {
         const pageNumber = parseInt(page, 10); // Convertir a número
@@ -44,8 +47,7 @@ async function getPosts(req, res) {
 
 async function getPost(req, res) {
     const { path } = req.params;
-    const postRepository = getRepository(PostEntity);
-
+    
     try {
         const existingPost = await postRepository.findOne({ 
             where: { pos_path: path.toLowerCase() },
@@ -87,8 +89,6 @@ async function createPost(req, res){
 
     try {
         // Verificar si el path ya existe
-        const postRepository = getRepository(PostEntity);
-       
         const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
 
         if (existingPost) {
@@ -106,7 +106,6 @@ async function createPost(req, res){
         }
 
         // Guardar el nuevo post en la base de datos
-        // const userStorage = await newPost.save();
         await postRepository.save(newPost);
 
         return res.status(200).send(newPost);
@@ -131,7 +130,6 @@ async function updatePost(req, res) {
 
     try {
         // Verificar si el post existe
-        const postRepository = getRepository(PostEntity);
         const post = await postRepository.findOne({ where: { pos_id: posId } });
 
         if (!post) {
@@ -171,12 +169,9 @@ async function updatePost(req, res) {
         }
 
         // Guardar los cambios
-        // const updatedUser = await user.save();
         await postRepository.save(post);
 
         return res.status(200).send(post);
-
-        // return res.status(200).send(updatedUser);
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar la noticia" });
@@ -193,8 +188,6 @@ async function deletePost(req, res) {
 
     try {
         // Verificar si el post existe
-        const postRepository = getRepository(PostEntity);
-        // const user = await postRepository.findOne({ where: { pos_id } });
         const post = await postRepository.findOne({ where: { pos_id: posId } });
 
         if (!post) {
@@ -241,9 +234,6 @@ async function addDocuments(req, res) {
     }
 
     try {
-        const postRepository = getRepository(PostEntity);
-        const documentRepository = getRepository(DocumentEntity);
-
         const post = await postRepository.findOne({
             where: { pos_id: posId },
             relations: ["documentos"],
@@ -291,9 +281,6 @@ async function addImages(req, res) {
     }
 
     try {
-        const postRepository = getRepository(PostEntity);
-        const imgGalleryRepository = getRepository(GalleriaImagenesEntity);
-
         const post = await postRepository.findOne({
             where: { pos_id: posId },
             relations: ["imagenes"],

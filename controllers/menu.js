@@ -1,14 +1,12 @@
-const { getRepository } = require("typeorm");
+const { AppDataSource } = require("../data-source");
 const { MenuEntity } = require("../entities/menu");  // Importar el modelo User con TypeORM
-const fs = require("fs");
-const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
+
+const menuRepository = AppDataSource.getRepository(MenuEntity);
 
 async function getMenus(req, res){
     const {activo} = req.query;
     let response = null;
-
-    const menuRepository = getRepository(MenuEntity);
 
     if(activo === undefined){
         response = await menuRepository.find();
@@ -54,9 +52,7 @@ async function createMenu(req, res){
     }
 
     try {
-        // Verificar si el email ya existe
-        const menuRepository = getRepository(MenuEntity);
-        // const existingUser = await menuRepository.findOne({ email: email.toLowerCase() });
+        // Verificar si existe
         const existingMenu = await menuRepository.findOne({ where: { men_path: path } });
 
         if (existingMenu) {
@@ -95,7 +91,6 @@ async function updateMenu(req, res) {
 
     try {
         // Verificar si el menu existe
-        const menuRepository = getRepository(MenuEntity);
         const menu = await menuRepository.findOne({ where: { men_id: menId } });
 
         if (!menu) {
@@ -130,7 +125,6 @@ async function updateMenu(req, res) {
         }
 
         // Guardar los cambios
-        // const updatedUser = await user.save();
         await menuRepository.save(menu);
 
         return res.status(200).send(menu);
@@ -151,7 +145,6 @@ async function deleteMenu(req, res) {
 
     try {
         // Verificar si el menu existe
-        const menuRepository = getRepository(MenuEntity);
         const menu = await menuRepository.findOne({ where: { men_id: menId } });
 
         if (!menu) {
