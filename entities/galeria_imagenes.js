@@ -1,7 +1,7 @@
 const { EntitySchema } = require("typeorm");
 
-const GalleriaImagenesEntity = new EntitySchema({
-    name: "GalleriaImagenesEntity", // El nombre de la entidad
+const GaleriaImagenesEntity = new EntitySchema({
+    name: "GaleriaImagenesEntity", // El nombre de la entidad
     tableName: "galeria_imagenes", // El nombre de la tabla en la base de datos
     columns: {
         gim_id: {
@@ -39,7 +39,7 @@ const GalleriaImagenesEntity = new EntitySchema({
 });
 
 module.exports = {
-    GalleriaImagenesEntity
+    GaleriaImagenesEntity
 };
 
 

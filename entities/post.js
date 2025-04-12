@@ -52,7 +52,7 @@ const PostEntity = new EntitySchema({
             //cascade: true,
         },
         imagenes: {
-            target: "GalleriaImagenesEntity",
+            target: "GaleriaImagenesEntity",
             type: "many-to-many",
             joinTable: {
                 name: "posts_imagenes",

@@ -1,11 +1,11 @@
 const { AppDataSource } = require("../data-source");
-const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
+const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
-const imageGalleryRepository = AppDataSource.getRepository(GalleriaImagenesEntity);
+const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 
 async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings

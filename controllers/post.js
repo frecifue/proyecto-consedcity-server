@@ -2,14 +2,14 @@ const { In } = require("typeorm");
 const { AppDataSource } = require("../data-source");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
-const { GalleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
+const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
 
 const postRepository = AppDataSource.getRepository(PostEntity);
-const imgGalleryRepository = AppDataSource.getRepository(GalleriaImagenesEntity);
+const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getPosts(req, res) {
