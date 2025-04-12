@@ -41,3 +41,6 @@ const GalleriaImagenesEntity = new EntitySchema({
 module.exports = {
     GalleriaImagenesEntity
 };
+
+
+

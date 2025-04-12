@@ -1,6 +1,4 @@
 const { EntitySchema } = require("typeorm");
-const { DocumentEntity } = require("./documentos");
-const { GalleriaImagenesEntity } = require("./galeria_imagenes");
 
 const PostEntity = new EntitySchema({
     name: "PostEntity",

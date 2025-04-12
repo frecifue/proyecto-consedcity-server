@@ -24,6 +24,7 @@ async function getImagesGallery(req, res) {
             skip,
             take: limitNumber,
             order: { gim_created_at: "DESC" },
+            relations: ["posts"]
         });
 
         return res.status(200).send({
@@ -144,11 +145,21 @@ async function deleteImageGallery(req, res) {
 
     try {
         // Verificar si la imagen existe
-        const imageGallery = await imageGalleryRepository.findOne({ where: { gim_id: gimId } });
-
+        
+        const imageGallery = await imageGalleryRepository.findOne({ where: 
+            { gim_id: gimId }, 
+            // relations: ["posts"] 
+        });
+    
         if (!imageGallery) {
             return res.status(404).send({ msg: "Imagen no encontrada" });
         }
+
+        // 1. Quitar la imagen de todos los posts relacionados
+        // for (const post of imageGallery.posts) {
+        //     post.imagenes = post.imagenes.filter(gim => gim.gim_id !== gimId);
+        //     await postRepository.save(post); // Guardar los cambios en el post
+        // }
 
         // Verificar si la imgen tiene un file y eliminar el archivo
         if (imageGallery.gim_imagen) {
