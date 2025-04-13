@@ -1,11 +1,14 @@
 const { AppDataSource } = require("../data-source");
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
+const { PostEntity } = require("../entities/post");
 const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
+const { log } = require("console");
 
 const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
+const postRepository = AppDataSource.getRepository(PostEntity);
 
 async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
@@ -24,7 +27,7 @@ async function getImagesGallery(req, res) {
             skip,
             take: limitNumber,
             order: { gim_created_at: "DESC" },
-            relations: ["posts"]
+            // relations: ["posts"]
         });
 
         return res.status(200).send({
@@ -135,7 +138,6 @@ async function updateImageGallery(req, res) {
     }
 }
 
-
 async function deleteImageGallery(req, res) {
     const { gimId } = req.params;
 
@@ -143,50 +145,84 @@ async function deleteImageGallery(req, res) {
         return res.status(400).send({ msg: "gimId no encontrada" });
     }
 
+    const queryRunner = AppDataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-        // Verificar si la imagen existe
-        
-        const imageGallery = await imageGalleryRepository.findOne({ where: 
-            { gim_id: gimId }, 
-            // relations: ["posts"] 
-        });
-    
+        const queryImageGalleryRepository = queryRunner.manager.getRepository("GaleriaImagenesEntity");
+        const queryPostRepository = queryRunner.manager.getRepository("PostEntity");
+
+        // Buscar la imagen
+        const imageGallery = await queryImageGalleryRepository.findOne({ where: { gim_id: gimId } });
+
         if (!imageGallery) {
+            await queryRunner.rollbackTransaction();
             return res.status(404).send({ msg: "Imagen no encontrada" });
         }
 
-        // 1. Quitar la imagen de todos los posts relacionados
-        // for (const post of imageGallery.posts) {
-        //     post.imagenes = post.imagenes.filter(gim => gim.gim_id !== gimId);
-        //     await postRepository.save(post); // Guardar los cambios en el post
-        // }
+        // Buscar posts que contienen esta imagen
+        const postsWithImage = await queryPostRepository
+            .createQueryBuilder("post")
+            .leftJoin("post.imagenes", "imagenFiltro")
+            .where("imagenFiltro.gim_id = :gimId", { gimId })
+            .leftJoinAndSelect("post.imagenes", "imagenCompleta")
+            .getMany();
 
-        // Verificar si la imgen tiene un file y eliminar el archivo
-        if (imageGallery.gim_imagen) {
-            // Obtener la ruta relativa del avatar
-            const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
+        for (const post of postsWithImage) {
+            post.imagenes = post.imagenes.filter(img => img.gim_id !== parseInt(gimId));
+            await queryPostRepository.save(post);
+        }
 
-            console.log("Intentando eliminar el archivo en: ", avatarPath);
+        // verificamos si la imagen sigue en uso en otras noticias
+        const stillUsed = await queryPostRepository
+            .createQueryBuilder("post")
+            .leftJoin("post.imagenes", "imagen")
+            .where("imagen.gim_id = :gimId", { gimId })
+            .getCount();
 
-            // Eliminar el archivo de avatar
-            fs.unlink(avatarPath, (err) => {
-                if (err) {
-                    console.error("Error al eliminar la imagen:", err);
-                } else {
-                    console.log("Imagen eliminado exitosamente");
-                }
+        if (stillUsed === 0) {
+            // Eliminar archivo del sistema
+            if (imageGallery.gim_imagen) {
+                const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
+                console.log("Intentando eliminar el archivo en: ", avatarPath);
+
+                fs.unlink(avatarPath, (err) => {
+                    if (err) {
+                        console.error("Error al eliminar la imagen del disco:", err);
+                    } else {
+                        console.log("Archivo eliminado exitosamente del disco");
+                    }
+                });
+            }
+
+            await queryImageGalleryRepository.remove(imageGallery);
+            await queryRunner.commitTransaction();
+            return res.status(200).send({ msg: "Imagen eliminada correctamente" });
+        } else {
+            // Si aún se usa en otros posts, revertimos todo
+            await queryRunner.rollbackTransaction();
+            return res.status(400).send({
+                msg: "No se puede eliminar la imagen porque sigue en uso por otras noticias"
             });
         }
 
-        // Eliminar la imagen
-        await imageGalleryRepository.remove(imageGallery); // Usar el método remove del repositorio
-
-        return res.status(200).send({ msg: "Imagen eliminado exitosamente" });
     } catch (error) {
-        console.error(error);  // Agrega un log para ver detalles del error
+        await queryRunner.rollbackTransaction();
+        console.error(error);
         return res.status(400).send({ msg: "Error al eliminar imagen", error: error.message });
+    } finally {
+        await queryRunner.release();
     }
 }
+
+
+module.exports = {
+    deleteImageGallery,
+};
+
+
 
 module.exports = {
     getImagesGallery,

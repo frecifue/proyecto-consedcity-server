@@ -184,21 +184,37 @@ async function deleteDocument(req, res) {
         return res.status(400).send({ msg: "docId no encontrado" });
     }
 
+    const queryRunner = AppDataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
+        const queryDocumentRepository = queryRunner.manager.getRepository("DocumentEntity");
+        const queryPostRepository = queryRunner.manager.getRepository("PostEntity");
+
         // Buscar el documento
-        const document = await documentRepository.findOne({ where: { doc_id: docId }, relations: ["posts"] });
+        const document = await queryDocumentRepository.findOne({ where: { doc_id: docId } });
 
         if (!document) {
+            await queryRunner.rollbackTransaction();
             return res.status(404).send({ msg: "Documento no encontrado" });
         }
 
-        // 1. Quitar el documento de todos los posts relacionados
-        for (const post of document.posts) {
-            post.documentos = post.documentos.filter(doc => doc.doc_id !== docId);
-            await postRepository.save(post); // Guardar los cambios en el post
+        // Buscar posts que contienen este documento
+        const postsWithDocuments = await queryPostRepository
+            .createQueryBuilder("post")
+            .leftJoin("post.documentos", "documentoFiltro")
+            .where("documentoFiltro.doc_id = :docId", { docId })
+            .leftJoinAndSelect("post.documentos", "documentoCompleto")
+            .getMany();
+
+        for (const post of postsWithDocuments) {
+            post.documentos = post.documentos.filter(doc => doc.doc_id !== parseInt(docId));
+            await queryPostRepository.save(post);
         }
 
-        // 2. Eliminar el archivo asociado si existe
+        // 2. Verificar y eliminar el archivo asociado si existe
         if (document.doc_documento) {
             const filePath = path.join(__dirname, "..", "uploads", document.doc_documento);
             console.log("Ruta del archivo a eliminar: ", filePath); // Verifica la ruta completa
@@ -208,22 +224,23 @@ async function deleteDocument(req, res) {
                 fs.unlinkSync(filePath); // Eliminar el archivo
                 console.log("Archivo eliminado exitosamente");
             } else {
-                console.log("El archivo no existe en la ruta: ", filePath);  // Mostrar si no existe
+                console.log("El archivo no existe en la ruta: ", filePath); // Mostrar si no existe
             }
         }
 
         // 3. Eliminar el documento de la base de datos
-        await documentRepository.remove(document);
+        await queryDocumentRepository.remove(document);
 
+        await queryRunner.commitTransaction();
         return res.status(200).send({ msg: "Documento eliminado correctamente" });
     } catch (error) {
+        await queryRunner.rollbackTransaction();
         console.error(error);
-        return res.status(400).send({ msg: "Error al eliminar el documento" });
+        return res.status(400).send({ msg: "Error al eliminar el documento", error: error.message });
+    } finally {
+        await queryRunner.release();
     }
 }
-
-
-
 
 
 module.exports = {
