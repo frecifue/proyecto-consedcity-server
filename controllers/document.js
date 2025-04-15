@@ -41,32 +41,11 @@ async function getDocuments(req, res) {
     }
 }
 
-async function getDocument(req, res) {
-    let { path_doc } = req.params;
-    
-    path_doc = trimLowerCase(path_doc)
-
-    try {
-        const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
-
-        if(!existingDocument){
-            return res.status(400).send({ msg: "No se ha encontrado el documento" });
-        }
-    
-        return res.status(200).send(existingDocument);    
-    } catch (error) {
-        console.error(error);
-        return res.status(400).send({ msg: "Error al obtener el documento" });
-    }
-}
-
-
 async function createDocument(req, res) {
-    let { titulo, descripcion, path_doc, orden } = req.body;
+    let { titulo, descripcion, orden } = req.body;
 
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
-    path_doc = trimLowerCase(path_doc);
     orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
@@ -76,24 +55,15 @@ async function createDocument(req, res) {
     if (!req.files?.documento) {
         return res.status(400).send({ msg: "archivo obligatorio" });
     }
-    if (!path_doc) {
-        return res.status(400).send({ msg: "ruta obligatoria" });
-    }
     if (isNaN(orden)) {
         return res.status(400).send({ msg: "orden obligatorio" });
     }
 
     try {
         
-        const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
-        if (existingDocument) {
-            return res.status(400).send({ msg: "La ruta ya está registrada" });
-        }
-
         const newDocument = documentRepository.create({
             doc_titulo: titulo,
             doc_descripcion: descripcion,
-            doc_path: path_doc,
             doc_orden: orden
         });
 
@@ -113,7 +83,7 @@ async function createDocument(req, res) {
 
 async function updateDocument(req, res) {
     const { docId } = req.params;
-    let { titulo, descripcion, path_doc, orden } = req.body;
+    let { titulo, descripcion, orden } = req.body;
 
     if (!docId) {
         return res.status(400).send({ msg: "docId no encontrado" });
@@ -121,7 +91,6 @@ async function updateDocument(req, res) {
 
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
-    path_doc = trimLowerCase(path_doc);
     orden = parseInt(orden);
 
     try {
@@ -129,15 +98,6 @@ async function updateDocument(req, res) {
 
         if (!document) {
             return res.status(404).send({ msg: "Documento no encontrado" });
-        }
-
-        // Validación de cambio de ruta
-        if (path_doc && path_doc !== document.doc_path) {
-            const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
-            if (existingDocument) {
-                return res.status(400).send({ msg: "La ruta ya está registrada" });
-            }
-            document.doc_path = path_doc;
         }
 
         // Actualización de los campos
@@ -245,7 +205,6 @@ async function deleteDocument(req, res) {
 
 module.exports = {
     getDocuments,
-    getDocument,
     createDocument,
     updateDocument,
     deleteDocument,

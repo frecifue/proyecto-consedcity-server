@@ -9,7 +9,6 @@ const md_upload = multiparty();  // Sin pasar el uploadDir aquí, ya que lo manej
 
 // Definir las rutas
 api.get("/documents", DocumentController.getDocuments);
-api.get("/document/:path_doc", DocumentController.getDocument);
 api.post("/document", [md_auth.asureAuth, dynamicUploadDir, md_upload], DocumentController.createDocument);
 api.patch("/document/:docId", [md_auth.asureAuth, dynamicUploadDir, md_upload], DocumentController.updateDocument);
 api.delete("/document/:docId", [md_auth.asureAuth], DocumentController.deleteDocument);

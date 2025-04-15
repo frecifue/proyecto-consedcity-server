@@ -37,7 +37,6 @@ async function createTeam(req, res){
     }
 
     try {
-        // Verificar si el path ya existe
         const newTeam = teamRepository.create({
             equ_nombre: nombre,
             equ_descripcion: descripcion,
