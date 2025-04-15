@@ -42,12 +42,12 @@ async function register(req, res) {
         const hashPassword = bcrypt.hashSync(password, salt);
 
         const newUser = userRepository.create({
-            usu_nombres: nombres,
-            usu_primer_apellido: primer_apellido,
-            usu_email: email,
-            usu_rol: "colaborador",
-            usu_activo: false,
-            usu_password: hashPassword,
+            usu_nombres         : nombres,
+            usu_primer_apellido : primer_apellido,
+            usu_email           : email,
+            tipo_usuario        : { tus_id: 3 },  // colaborador
+            usu_activo          : false,
+            usu_password        : hashPassword,
         });
 
         // Guardar el nuevo usuario en la base de datos

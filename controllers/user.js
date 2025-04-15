@@ -61,7 +61,7 @@ async function createUser(req, res){
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = trimLowerCase(rol)
+    rol = parseInt(rol);
 
     // Validaciones de campos obligatorios
     if (!nombres) {
@@ -76,7 +76,7 @@ async function createUser(req, res){
     if (!password) {
         return res.status(400).send({ msg: "password obligatorio" });
     }
-    if (!rol) {
+    if (isNaN(rol)) {
         return res.status(400).send({ msg: "rol obligatorio" });
     }
 
@@ -97,7 +97,7 @@ async function createUser(req, res){
             usu_primer_apellido : primer_apellido,
             usu_segundo_apellido: segundo_apellido,
             usu_email           : email,
-            usu_rol             : rol,
+            tipo_usuario        : { tus_id: rol },
             usu_activo          : 0,
             usu_password        : hashPassword,
         });
@@ -120,7 +120,7 @@ async function createUser(req, res){
 async function updateUser(req, res) {
     const { userId } = req.params;
     let { nombres, primer_apellido, segundo_apellido, email, password, rol, activo } = req.body;
-    
+
     if (!userId) {
         return res.status(400).send({ msg: "userId no encontrado" });
     }
@@ -130,7 +130,7 @@ async function updateUser(req, res) {
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = trimLowerCase(rol)
+    rol = parseInt(rol);
 
     try {
         // Verificar si el usuario existe
@@ -154,7 +154,8 @@ async function updateUser(req, res) {
         if (nombres) user.usu_nombres = nombres;
         if (primer_apellido) user.usu_primer_apellido = primer_apellido;
         if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido;
-        if (rol) user.usu_rol = rol;
+        // if (rol) user.tus_id = rol;
+        if (rol) user.tipo_usuario = { tus_id: rol };
     
         if (activo === "true" || activo === 1) {
             user.usu_activo = 1;
@@ -188,8 +189,9 @@ async function updateUser(req, res) {
 
         // Guardar los cambios
         await userRepository.save(user);
+        const updatedUser = await userRepository.findOne({ where: { usu_id: userId } });
 
-        return res.status(200).send(user);
+        return res.status(200).send(updatedUser);
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar usuario" });
