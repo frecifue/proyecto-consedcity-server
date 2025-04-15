@@ -1,11 +1,10 @@
 const { AppDataSource } = require("../data-source");
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
 const { PostEntity } = require("../entities/post");
-const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
-const { log } = require("console");
+const documentPath = require("../utils/documentPath");
 
 const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const postRepository = AppDataSource.getRepository(PostEntity);
@@ -74,7 +73,8 @@ async function createImageGallery(req, res){
             gim_orden: orden,
         });
 
-        newImageGallery.gim_imagen = image.getFilePath2(req.files.imagen)
+        const finalPath = documentPath.generateFilePathWithDate(req.files.imagen, "galeria_imagenes"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
+        newImageGallery.gim_imagen = finalPath;
 
         await imageGalleryRepository.save(newImageGallery);
 
@@ -125,7 +125,8 @@ async function updateImageGallery(req, res) {
             }
 
             // Guardar el nuevo avatar
-            imageGallery.gim_imagen = image.getFilePath2(req.files.imagen);
+            const finalPath = documentPath.generateFilePathWithDate(req.files.imagen, "galeria_imagenes"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
+            imageGallery.gim_imagen = finalPath;
         }
 
         // Guardar los cambios

@@ -3,10 +3,10 @@ const { AppDataSource } = require("../data-source");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
-const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
+const documentPath = require("../utils/documentPath");
 
 const postRepository = AppDataSource.getRepository(PostEntity);
 const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
@@ -101,9 +101,8 @@ async function createPost(req, res){
             pos_path: path_post
         });
 
-        if(req.files.img_principal){
-            newPost.pos_img_principal = image.getFilePath(req.files.img_principal)
-        }
+        const finalPath = documentPath.generateFilePathWithDate(req.files.img_principal, "posts"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
+        newPost.pos_img_principal = finalPath;
 
         // Guardar el nuevo post en la base de datos
         await postRepository.save(newPost);
@@ -165,7 +164,8 @@ async function updatePost(req, res) {
             }
 
             // Guardar el nuevo avatar
-            post.pos_img_principal = image.getFilePath(req.files.img_principal);
+            const finalPath = documentPath.generateFilePathWithDate(req.files.img_principal, "posts"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
+            post.pos_img_principal = finalPath;
         }
 
         // Guardar los cambios
