@@ -15,9 +15,6 @@ const contactRoutes = require("./router/contact");
 const imageGalleryRoutes = require("./router/image_gallery");
 const documentRoutes = require("./router/document");
 
-// mantenedores
-const typeUserRoutes = require("./router/type_user");
-
 // ?? Middlewares
 app.use(express.json()); // Reemplaza body-parser.json()
 app.use(express.urlencoded({ extended: true })); // Reemplaza body-parser.urlencoded()
@@ -39,8 +36,6 @@ app.use(`/api/${API_VERSION}`, teamRoutes);
 app.use(`/api/${API_VERSION}`, contactRoutes);
 app.use(`/api/${API_VERSION}`, imageGalleryRoutes);
 app.use(`/api/${API_VERSION}`, documentRoutes);
-app.use(`/api/${API_VERSION}`, typeUserRoutes);
-
 
 // ?? Mensaje de bienvenida
 app.get("/", (req, res) => {

@@ -1,10 +1,11 @@
 const { AppDataSource } = require("../data-source");
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
 const { PostEntity } = require("../entities/post");
+const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
-const documentPath = require("../utils/documentPath");
+const { log } = require("console");
 
 const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const postRepository = AppDataSource.getRepository(PostEntity);
@@ -13,14 +14,14 @@ async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
     
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a número
-        const limitNumber = parseInt(limit, 10); // Convertir a número
+        const pageNumber = parseInt(page, 10); // Convertir a nï¿½mero
+        const limitNumber = parseInt(limit, 10); // Convertir a nï¿½mero
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+            return res.status(400).send({ msg: "Los parï¿½metros 'page' y 'limit' deben ser nï¿½meros vï¿½lidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Cálculo correcto
+        const skip = (pageNumber - 1) * limitNumber; // Cï¿½lculo correcto
 
         const [images, total] = await imageGalleryRepository.findAndCount({
             skip,
@@ -38,7 +39,7 @@ async function getImagesGallery(req, res) {
         });
     } catch (error) {
         console.error(error);
-        return res.status(400).send({ msg: "Error al obtener la galeria de imágenes" });
+        return res.status(400).send({ msg: "Error al obtener la galeria de imï¿½genes" });
     }
 }
 
@@ -73,8 +74,7 @@ async function createImageGallery(req, res){
             gim_orden: orden,
         });
 
-        const finalPath = documentPath.generateFilePathWithDate(req.files.imagen, "galeria_imagenes"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
-        newImageGallery.gim_imagen = finalPath;
+        newImageGallery.gim_imagen = image.getFilePath2(req.files.imagen)
 
         await imageGalleryRepository.save(newImageGallery);
 
@@ -125,8 +125,7 @@ async function updateImageGallery(req, res) {
             }
 
             // Guardar el nuevo avatar
-            const finalPath = documentPath.generateFilePathWithDate(req.files.imagen, "galeria_imagenes"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
-            imageGallery.gim_imagen = finalPath;
+            imageGallery.gim_imagen = image.getFilePath2(req.files.imagen);
         }
 
         // Guardar los cambios
@@ -202,7 +201,7 @@ async function deleteImageGallery(req, res) {
             await queryRunner.commitTransaction();
             return res.status(200).send({ msg: "Imagen eliminada correctamente" });
         } else {
-            // Si aún se usa en otros posts, revertimos todo
+            // Si aï¿½n se usa en otros posts, revertimos todo
             await queryRunner.rollbackTransaction();
             return res.status(400).send({
                 msg: "No se puede eliminar la imagen porque sigue en uso por otras noticias"

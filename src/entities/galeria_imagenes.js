@@ -33,7 +33,18 @@ const GaleriaImagenesEntity = new EntitySchema({
         posts: {
             target: "PostEntity",
             type: "many-to-many",
-            inverseSide: "imagenes",
+            joinTable:{
+                name: "posts_imagenes",
+                joinColumn: {
+                    name: "gim_id",
+                    referencedColumnName: "gim_id",
+                },
+                inverseJoinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
         },
     },
 });

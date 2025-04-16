@@ -13,14 +13,14 @@ async function getDocuments(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
     
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a número
-        const limitNumber = parseInt(limit, 10); // Convertir a número
+        const pageNumber = parseInt(page, 10); // Convertir a nï¿½mero
+        const limitNumber = parseInt(limit, 10); // Convertir a nï¿½mero
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+            return res.status(400).send({ msg: "Los parï¿½metros 'page' y 'limit' deben ser nï¿½meros vï¿½lidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Cálculo correcto
+        const skip = (pageNumber - 1) * limitNumber; // Cï¿½lculo correcto
 
         const [documents, total] = await documentRepository.findAndCount({
             skip,
@@ -41,19 +41,43 @@ async function getDocuments(req, res) {
     }
 }
 
+async function getDocument(req, res) {
+    let { path_doc } = req.params;
+    
+    path_doc = trimLowerCase(path_doc)
+
+    try {
+        const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
+
+        if(!existingDocument){
+            return res.status(400).send({ msg: "No se ha encontrado el documento" });
+        }
+    
+        return res.status(200).send(existingDocument);    
+    } catch (error) {
+        console.error(error);
+        return res.status(400).send({ msg: "Error al obtener el documento" });
+    }
+}
+
+
 async function createDocument(req, res) {
-    let { titulo, descripcion, orden } = req.body;
+    let { titulo, descripcion, path_doc, orden } = req.body;
 
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
+    path_doc = trimLowerCase(path_doc);
     orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
     if (!titulo) {
-        return res.status(400).send({ msg: "título obligatorio" });
+        return res.status(400).send({ msg: "tï¿½tulo obligatorio" });
     }
     if (!req.files?.documento) {
         return res.status(400).send({ msg: "archivo obligatorio" });
+    }
+    if (!path_doc) {
+        return res.status(400).send({ msg: "ruta obligatoria" });
     }
     if (isNaN(orden)) {
         return res.status(400).send({ msg: "orden obligatorio" });
@@ -61,9 +85,15 @@ async function createDocument(req, res) {
 
     try {
         
+        const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
+        if (existingDocument) {
+            return res.status(400).send({ msg: "La ruta ya estï¿½ registrada" });
+        }
+
         const newDocument = documentRepository.create({
             doc_titulo: titulo,
             doc_descripcion: descripcion,
+            doc_path: path_doc,
             doc_orden: orden
         });
 
@@ -83,7 +113,7 @@ async function createDocument(req, res) {
 
 async function updateDocument(req, res) {
     const { docId } = req.params;
-    let { titulo, descripcion, orden } = req.body;
+    let { titulo, descripcion, path_doc, orden } = req.body;
 
     if (!docId) {
         return res.status(400).send({ msg: "docId no encontrado" });
@@ -91,6 +121,7 @@ async function updateDocument(req, res) {
 
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
+    path_doc = trimLowerCase(path_doc);
     orden = parseInt(orden);
 
     try {
@@ -100,7 +131,16 @@ async function updateDocument(req, res) {
             return res.status(404).send({ msg: "Documento no encontrado" });
         }
 
-        // Actualización de los campos
+        // Validaciï¿½n de cambio de ruta
+        if (path_doc && path_doc !== document.doc_path) {
+            const existingDocument = await documentRepository.findOne({ where: { doc_path: path_doc } });
+            if (existingDocument) {
+                return res.status(400).send({ msg: "La ruta ya estï¿½ registrada" });
+            }
+            document.doc_path = path_doc;
+        }
+
+        // Actualizaciï¿½n de los campos
         if (titulo) document.doc_titulo = titulo;
         if (descripcion) document.doc_descripcion = descripcion;
 
@@ -120,7 +160,7 @@ async function updateDocument(req, res) {
                 }
             }
 
-            // Obtener la nueva ruta del archivo con la nueva función
+            // Obtener la nueva ruta del archivo con la nueva funciï¿½n
             const finalPath = documentPath.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo documentos/2025/04/uuid.pdf
 
             // Guardar la nueva ruta en la base de datos
@@ -205,6 +245,7 @@ async function deleteDocument(req, res) {
 
 module.exports = {
     getDocuments,
+    getDocument,
     createDocument,
     updateDocument,
     deleteDocument,

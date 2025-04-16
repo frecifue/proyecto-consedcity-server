@@ -16,6 +16,11 @@ const DocumentEntity = new EntitySchema({
         doc_descripcion: {
             type: "text",
         },
+        doc_path: {
+            type: "varchar",
+            length: 500,
+            unique: true,
+        },
         doc_documento: {
             type: "varchar",
             length: 500,
@@ -37,7 +42,18 @@ const DocumentEntity = new EntitySchema({
         posts: {
             target: "PostEntity",
             type: "many-to-many",
-            inverseSide: "documentos",
+            joinTable: {
+                name: "posts_documentos",
+                joinColumn: {
+                    name: "doc_id",
+                    referencedColumnName: "doc_id",
+                },
+                inverseJoinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
         },
     },
 });

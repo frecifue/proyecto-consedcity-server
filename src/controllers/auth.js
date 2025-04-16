@@ -34,7 +34,7 @@ async function register(req, res) {
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
-            return res.status(400).send({ msg: "El email ya está registrado" });
+            return res.status(400).send({ msg: "El email ya estï¿½ registrado" });
         }
 
         // Crear el nuevo usuario
@@ -42,12 +42,12 @@ async function register(req, res) {
         const hashPassword = bcrypt.hashSync(password, salt);
 
         const newUser = userRepository.create({
-            usu_nombres         : nombres,
-            usu_primer_apellido : primer_apellido,
-            usu_email           : email,
-            tipo_usuario        : { tus_id: 3 },  // colaborador
-            usu_activo          : false,
-            usu_password        : hashPassword,
+            usu_nombres: nombres,
+            usu_primer_apellido: primer_apellido,
+            usu_email: email,
+            usu_rol: "colaborador",
+            usu_activo: false,
+            usu_password: hashPassword,
         });
 
         // Guardar el nuevo usuario en la base de datos
@@ -78,14 +78,14 @@ async function login(req, res) {
             return res.status(400).send({ msg: "El email no existe" });
         }
 
-        // Comprobar la contraseña con bcrypt
+        // Comprobar la contraseï¿½a con bcrypt
         bcrypt.compare(password, userStore.usu_password, (bcryptError, check) => {
             if (bcryptError) {
                 return res.status(500).send({ msg: "error del servidor" });
             } else if (!check) {
-                return res.status(400).send({ msg: "contraseña incorrecta" });
+                return res.status(400).send({ msg: "contraseï¿½a incorrecta" });
             } else if (!userStore.usu_activo) {
-                return res.status(401).send({ msg: "el usuario está inactivo" });
+                return res.status(401).send({ msg: "el usuario estï¿½ inactivo" });
             } else {
                 // Generar y devolver los tokens
                 return res.status(200).send({
