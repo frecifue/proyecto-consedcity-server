@@ -2,3 +2,8 @@ node_modules/
 .env
 logs/
 
+.qodo
+.history
+mysql_data/
+
+uploads/
