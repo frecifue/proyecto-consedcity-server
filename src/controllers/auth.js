@@ -34,7 +34,7 @@ async function register(req, res) {
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
-            return res.status(400).send({ msg: "El email ya estï¿½ registrado" });
+            return res.status(400).send({ msg: "El email ya está registrado" });
         }
 
         // Crear el nuevo usuario
@@ -83,9 +83,9 @@ async function login(req, res) {
             if (bcryptError) {
                 return res.status(500).send({ msg: "error del servidor" });
             } else if (!check) {
-                return res.status(400).send({ msg: "contraseï¿½a incorrecta" });
+                return res.status(400).send({ msg: "contraseña incorrecta" });
             } else if (!userStore.usu_activo) {
-                return res.status(401).send({ msg: "el usuario estï¿½ inactivo" });
+                return res.status(401).send({ msg: "el usuario está inactivo" });
             } else {
                 // Generar y devolver los tokens
                 return res.status(200).send({

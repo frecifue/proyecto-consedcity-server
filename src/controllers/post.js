@@ -28,7 +28,7 @@ async function getPosts(req, res) {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            relations: ["documentos","galeria_imagenes" ],
+            relations: ["documentos","imagenes" ],
         });
 
         return res.status(200).send({
@@ -50,7 +50,7 @@ async function getPost(req, res) {
     try {
         const existingPost = await postRepository.findOne({ 
             where: { pos_path: path.toLowerCase() },
-            relations: ["documentos", "galeria_imagenes"],
+            relations: ["documentos", "imagenes"],
         });
 
         if(!existingPost){

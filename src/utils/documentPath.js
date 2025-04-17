@@ -18,7 +18,7 @@ function generateFilePathWithDate(file, folder) {
 
     // Ruta relativa donde se almacenará el archivo
     const relativeDir = path.join("uploads", folder, year.toString(), month);
-    const absoluteDir = path.join(__dirname, "..", relativeDir);
+    const absoluteDir = path.join(__dirname, "..", "..", relativeDir);
 
     if (!fs.existsSync(absoluteDir)) {
         fs.mkdirSync(absoluteDir, { recursive: true });
