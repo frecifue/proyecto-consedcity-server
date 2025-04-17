@@ -16,11 +16,6 @@ const DocumentEntity = new EntitySchema({
         doc_descripcion: {
             type: "text",
         },
-        doc_path: {
-            type: "varchar",
-            length: 500,
-            unique: true,
-        },
         doc_documento: {
             type: "varchar",
             length: 500,

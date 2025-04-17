@@ -97,7 +97,7 @@ async function createUser(req, res){
             usu_primer_apellido : primer_apellido,
             usu_segundo_apellido: segundo_apellido,
             usu_email           : email,
-            usu_rol             : rol,
+            tipo_usuario        : { tus_id: rol },
             usu_activo          : 0,
             usu_password        : hashPassword,
         });
@@ -154,7 +154,7 @@ async function updateUser(req, res) {
         if (nombres) user.usu_nombres = nombres;
         if (primer_apellido) user.usu_primer_apellido = primer_apellido;
         if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido;
-        if (rol) user.usu_rol = rol;
+        if (rol) user.tipo_usuario = { tus_id: rol };
     
         if (activo === "true" || activo === 1) {
             user.usu_activo = 1;

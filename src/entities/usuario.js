@@ -30,11 +30,6 @@ const { EntitySchema } = require("typeorm");
             type: "varchar",
             length: 255,
         },
-        usu_rol: {
-            type: "enum",
-            enum: ["admin", "colaborador"],
-            default: "colaborador",
-        },
         usu_activo: {
             type: "boolean",
             default: false,
@@ -51,6 +46,16 @@ const { EntitySchema } = require("typeorm");
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
+    },
+    relations: {
+        tipo_usuario: {
+        type: "many-to-one",
+        target: "TipoUsuarioEntity",
+        joinColumn: {
+            name: "tus_id", // FK en la tabla usuarios
+        },
+        eager: true, // opcional: carga automática la relación
         },
     },
 });

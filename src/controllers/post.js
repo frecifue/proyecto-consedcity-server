@@ -50,7 +50,7 @@ async function getPost(req, res) {
     try {
         const existingPost = await postRepository.findOne({ 
             where: { pos_path: path.toLowerCase() },
-            relations: ["documentos", "imagenes"],
+            relations: ["documentos", "galeria_imagenes"],
         });
 
         if(!existingPost){
