@@ -39,7 +39,7 @@ async function createGeneralInformation(req, res){
 
             await generalInfoRepository.save(existingGeneralInfo);
 
-            return res.status(200).send({ msg: "Información General actualizada", data: existingGeneralInfo });
+            return res.status(200).send({ msg: "Informaciï¿½n General actualizada", data: existingGeneralInfo });
         }
 
         // Si no existe, crear un nuevo registro
@@ -85,7 +85,7 @@ async function updateGeneralInformation(req, res) {
         const generalInfo = await generalInfoRepository.findOne({ where: { ing_id: ingId } });
 
         if (!generalInfo) {
-            return res.status(404).send({ msg: "Información General no encontrada" });
+            return res.status(404).send({ msg: "Informaciï¿½n General no encontrada" });
         }
 
         // Actualizar los campos del usuario si se proporcionan
@@ -105,7 +105,7 @@ async function updateGeneralInformation(req, res) {
 
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
-        return res.status(400).send({ msg: "Error al actualizar información general" });
+        return res.status(400).send({ msg: "Error al actualizar informaciï¿½n general" });
     }
 }
 
@@ -122,13 +122,13 @@ async function deleteGeneralInformation(req, res) {
         const generalInfo = await generalInfoRepository.findOne({ where: { ing_id: ingId } });
 
         if (!generalInfo) {
-            return res.status(404).send({ msg: "Información General no encontrado" });
+            return res.status(404).send({ msg: "Informaciï¿½n General no encontrado" });
         }
 
         // Eliminar
         await generalInfoRepository.remove(generalInfo); 
 
-        return res.status(200).send({ msg: "Información General eliminada exitosamente" });
+        return res.status(200).send({ msg: "Informaciï¿½n General eliminada exitosamente" });
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al eliminar informacion general", error: error.message });

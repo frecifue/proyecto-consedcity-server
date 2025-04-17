@@ -3,10 +3,10 @@ const { AppDataSource } = require("../data-source");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
+const image = require("../utils/image");
 const fs = require("fs");
 const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
-const documentPath = require("../utils/documentPath");
 
 const postRepository = AppDataSource.getRepository(PostEntity);
 const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
@@ -16,20 +16,19 @@ async function getPosts(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
 
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a número
-        const limitNumber = parseInt(limit, 10); // Convertir a número
+        const pageNumber = parseInt(page, 10); // Convertir a nï¿½mero
+        const limitNumber = parseInt(limit, 10); // Convertir a nï¿½mero
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+            return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser nï¿½meros vï¿½lidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Cálculo correcto
-
+        const skip = (pageNumber - 1) * limitNumber; // Calculo correcto
         const [posts, total] = await postRepository.findAndCount({
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            relations: ["documentos", "imagenes"],
+            relations: ["documentos","galeria_imagenes" ],
         });
 
         return res.status(200).send({
@@ -51,7 +50,7 @@ async function getPost(req, res) {
     try {
         const existingPost = await postRepository.findOne({ 
             where: { pos_path: path.toLowerCase() },
-            relations: ["documentos", "imagenes"],
+            relations: ["documentos", "galeria_imagenes"],
         });
 
         if(!existingPost){
@@ -75,10 +74,10 @@ async function createPost(req, res){
 
     // Validaciones de campos obligatorios
     if (!titulo) {
-        return res.status(400).send({ msg: "título obligatorio" });
+        return res.status(400).send({ msg: "tï¿½tulo obligatorio" });
     }
     if (!req.files.img_principal) {
-        return res.status(400).send({ msg: "imágen principal obligatoria" });
+        return res.status(400).send({ msg: "imï¿½gen principal obligatoria" });
     }
     if (!contenido) {
         return res.status(400).send({ msg: "contenido obligatorio" });
@@ -92,7 +91,7 @@ async function createPost(req, res){
         const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
 
         if (existingPost) {
-            return res.status(400).send({ msg: "La ruta ya está registrada" });
+            return res.status(400).send({ msg: "La ruta ya estï¿½ registrada" });
         }
 
         const newPost = postRepository.create({
@@ -101,8 +100,9 @@ async function createPost(req, res){
             pos_path: path_post
         });
 
-        const finalPath = documentPath.generateFilePathWithDate(req.files.img_principal, "posts"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
-        newPost.pos_img_principal = finalPath;
+        if(req.files.img_principal){
+            newPost.pos_img_principal = image.getFilePath(req.files.img_principal)
+        }
 
         // Guardar el nuevo post en la base de datos
         await postRepository.save(newPost);
@@ -135,12 +135,12 @@ async function updatePost(req, res) {
             return res.status(404).send({ msg: "Post no encontrado" });
         }
 
-        // Verificar si se proporciona un nuevo path y si ya está registrado
+        // Verificar si se proporciona un nuevo path y si ya estï¿½ registrado
         if (path_post && path_post !== post.pos_path) {
-            // Verificar si el nuevo email ya está registrado
+            // Verificar si el nuevo email ya estï¿½ registrado
             const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
             if (existingPost) {
-                return res.status(400).send({ msg: "La ruta ya está registrada" });
+                return res.status(400).send({ msg: "La ruta ya estï¿½ registrada" });
             }
             post.pos_path = path_post.toLowerCase();
         }
@@ -164,8 +164,7 @@ async function updatePost(req, res) {
             }
 
             // Guardar el nuevo avatar
-            const finalPath = documentPath.generateFilePathWithDate(req.files.img_principal, "posts"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
-            post.pos_img_principal = finalPath;
+            post.pos_img_principal = image.getFilePath(req.files.img_principal);
         }
 
         // Guardar los cambios
@@ -212,7 +211,7 @@ async function deletePost(req, res) {
         }
 
         // Eliminar el post
-        await postRepository.remove(post); // Usar el método remove del repositorio
+        await postRepository.remove(post); // Usar el mï¿½todo remove del repositorio
 
         return res.status(200).send({ msg: "Noticia eliminado exitosamente" });
     } catch (error) {

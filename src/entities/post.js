@@ -39,7 +39,7 @@ const PostEntity = new EntitySchema({
             target: "DocumentEntity",
             type: "many-to-many",
             joinTable: {
-                name: "posts_documentos", // puedes cambiar el nombre si quieres
+                name: "posts_documentos",
                 joinColumn: {
                     name: "pos_id",
                     referencedColumnName: "pos_id",
@@ -49,9 +49,9 @@ const PostEntity = new EntitySchema({
                     referencedColumnName: "doc_id",
                 },
             },
-            //cascade: true,
+            cascade: true,
         },
-        imagenes: {
+        galeria_imagenes: {
             target: "GaleriaImagenesEntity",
             type: "many-to-many",
             joinTable: {
@@ -65,7 +65,7 @@ const PostEntity = new EntitySchema({
                     referencedColumnName: "gim_id",
                 },
             },
-            //cascade: true,
+          cascade: true,
         },
     },
 });
