@@ -5,3 +5,5 @@ logs/
 .qodo
 .history
 mysql_data/
+
+uploads/
