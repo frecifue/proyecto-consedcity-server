@@ -33,7 +33,7 @@ async function getUsers(req, res){
     if(activo === undefined){
         response = await userRepository.find();
     }else{
-        // Convertir el parámetro a un valor numérico válido (0 o 1)
+        // Convertir el parï¿½metro a un valor numï¿½rico vï¿½lido (0 o 1)
         let isActive;
         if (activo === "true") {
             isActive = 1;
@@ -44,7 +44,7 @@ async function getUsers(req, res){
         }
 
         if (isNaN(isActive)) {
-            return res.status(400).send({ error: "El parámetro 'activo' debe ser 0 o 1" });
+            return res.status(400).send({ error: "El parï¿½metro 'activo' debe ser 0 o 1" });
         }
         response = await userRepository.find({where: { usu_activo : isActive}});
     }
@@ -61,7 +61,7 @@ async function createUser(req, res){
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = parseInt(rol);
+    rol = trimLowerCase(rol)
 
     // Validaciones de campos obligatorios
     if (!nombres) {
@@ -76,7 +76,7 @@ async function createUser(req, res){
     if (!password) {
         return res.status(400).send({ msg: "password obligatorio" });
     }
-    if (isNaN(rol)) {
+    if (!rol) {
         return res.status(400).send({ msg: "rol obligatorio" });
     }
 
@@ -85,7 +85,7 @@ async function createUser(req, res){
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
-            return res.status(400).send({ msg: "El email ya está registrado" });
+            return res.status(400).send({ msg: "El email ya estï¿½ registrado" });
         }
 
         // Crear el nuevo usuario
@@ -120,7 +120,7 @@ async function createUser(req, res){
 async function updateUser(req, res) {
     const { userId } = req.params;
     let { nombres, primer_apellido, segundo_apellido, email, password, rol, activo } = req.body;
-
+    
     if (!userId) {
         return res.status(400).send({ msg: "userId no encontrado" });
     }
@@ -130,7 +130,7 @@ async function updateUser(req, res) {
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = parseInt(rol);
+    rol = trimLowerCase(rol)
 
     try {
         // Verificar si el usuario existe
@@ -140,12 +140,12 @@ async function updateUser(req, res) {
             return res.status(404).send({ msg: "Usuario no encontrado" });
         }
 
-        // Verificar si se proporciona un nuevo email y si ya está registrado
+        // Verificar si se proporciona un nuevo email y si ya estï¿½ registrado
         if (email && email !== user.usu_email) {
-            // Verificar si el nuevo email ya está registrado
+            // Verificar si el nuevo email ya estï¿½ registrado
             const existingUser = await userRepository.findOne({ where: { usu_email: email } });
             if (existingUser) {
-                return res.status(400).send({ msg: "El email ya está registrado" });
+                return res.status(400).send({ msg: "El email ya estï¿½ registrado" });
             }
             user.usu_email = email;
         }
@@ -154,7 +154,6 @@ async function updateUser(req, res) {
         if (nombres) user.usu_nombres = nombres;
         if (primer_apellido) user.usu_primer_apellido = primer_apellido;
         if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido;
-        // if (rol) user.tus_id = rol;
         if (rol) user.tipo_usuario = { tus_id: rol };
     
         if (activo === "true" || activo === 1) {
@@ -189,9 +188,8 @@ async function updateUser(req, res) {
 
         // Guardar los cambios
         await userRepository.save(user);
-        const updatedUser = await userRepository.findOne({ where: { usu_id: userId } });
 
-        return res.status(200).send(updatedUser);
+        return res.status(200).send(user);
     } catch (error) {
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar usuario" });
@@ -232,7 +230,7 @@ async function deleteUser(req, res) {
         }
 
         // Eliminar el usuario
-        await userRepository.remove(user); // Usar el método remove del repositorio
+        await userRepository.remove(user); // Usar el mï¿½todo remove del repositorio
 
         return res.status(200).send({ msg: "Usuario eliminado exitosamente" });
     } catch (error) {

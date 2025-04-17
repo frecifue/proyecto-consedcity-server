@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3977;
 
 async function startServer() {
     try {
-        // Iniciar la conexión a la base de datos
+        // Iniciar la conexion a la base de datos
         await AppDataSource.initialize();
         console.log("? Conectado a MySQL con TypeORM");
 
@@ -22,7 +22,7 @@ async function startServer() {
         });
 
     } catch (error) {
-        console.error("? Error de conexión a la base de datos:", error);
+        console.error("? Error de conexiï¿½n a la base de datos:", error);
     }
 }
 

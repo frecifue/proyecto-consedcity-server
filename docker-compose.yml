@@ -1,0 +1,35 @@
+services:
+  mysql:
+    container_name: mysql_container_node
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - backend
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+
+  phpmyadmin:
+    container_name: phpmyadmin_container_node
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql_container_node
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "8090:80"
+
+networks:
+  backend:
+
+volumes:
+  data:

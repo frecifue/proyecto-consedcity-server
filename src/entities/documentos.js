@@ -37,7 +37,18 @@ const DocumentEntity = new EntitySchema({
         posts: {
             target: "PostEntity",
             type: "many-to-many",
-            inverseSide: "documentos",
+            joinTable: {
+                name: "posts_documentos",
+                joinColumn: {
+                    name: "doc_id",
+                    referencedColumnName: "doc_id",
+                },
+                inverseJoinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
         },
     },
 });
