@@ -21,17 +21,11 @@ async function createTeam(req, res){
     orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
-    if (!nombre) {
-        return res.status(400).send({ msg: "nombre obligatorio" });
-    }
-    if (!req.files.foto_perfil) {
-        return res.status(400).send({ msg: "foto perfil obligatoria" });
-    }
-    if (!descripcion) {
-        return res.status(400).send({ msg: "descripcion obligatoria" });
-    }
-    if (isNaN(orden)) {
-        return res.status(400).send({ msg: "orden obligatorio" });
+    if(!nombre || !req.files.foto_perfil || !descripcion || isNaN(orden)){
+        if (req.files?.foto_perfil) {
+            fileUtils.cleanTempFile(req.files.foto_perfil);
+        }
+        return res.status(400).send({ msg: "nombre, foto perfil, descripción y orden obligatorio" });
     }
 
     try {
@@ -49,6 +43,9 @@ async function createTeam(req, res){
 
         return res.status(200).send(newTeam);
     } catch (error) {
+        if (req.files?.foto_perfil) {
+            fileUtils.cleanTempFile(req.files.foto_perfil);
+        }
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al crear mienbro del equipo" });
     }
@@ -60,6 +57,9 @@ async function updateTeam(req, res) {
     let { nombre, descripcion, orden } = req.body;
     
     if (!equId) {
+        if (req.files?.foto_perfil) {
+            fileUtils.cleanTempFile(req.files.foto_perfil);
+        }
         return res.status(400).send({ msg: "equId no encontrado" });
     }
 
@@ -72,6 +72,9 @@ async function updateTeam(req, res) {
         const equipo = await teamRepository.findOne({ where: { equ_id: equId } });
 
         if (!equipo) {
+            if (req.files?.foto_perfil) {
+                fileUtils.cleanTempFile(req.files.foto_perfil);
+            }
             return res.status(404).send({ msg: "Miembro del equipo no encontrado" });
         }
 
@@ -95,6 +98,9 @@ async function updateTeam(req, res) {
 
         return res.status(200).send(equipo);
     } catch (error) {
+        if (req.files?.foto_perfil) {
+            fileUtils.cleanTempFile(req.files.foto_perfil);
+        }
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar miembro del equipo" });
     }

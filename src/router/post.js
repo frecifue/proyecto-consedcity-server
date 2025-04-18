@@ -3,8 +3,8 @@ const PostController = require("../controllers/post");
 const md_auth = require("../middlewares/authenticated");
 const multiparty = require("connect-multiparty");
 
-const md_upload = multiparty({uploadDir: "./uploads/posts/img_principal"})
 const api = express.Router();
+const md_upload = multiparty();
 
 api.get("/posts", PostController.getPosts);
 api.get("/post/:path", PostController.getPost);

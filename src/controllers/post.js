@@ -71,17 +71,13 @@ async function createPost(req, res){
     path_post = trimLowerCase(path_post);
 
     // Validaciones de campos obligatorios
-    if (!titulo) {
-        return res.status(400).send({ msg: "título obligatorio" });
-    }
-    if (!req.files.img_principal) {
-        return res.status(400).send({ msg: "imágen principal obligatoria" });
-    }
-    if (!contenido) {
-        return res.status(400).send({ msg: "contenido obligatorio" });
-    }
-    if (!path_post) {
-        return res.status(400).send({ msg: "ruta obligatorio" });
+    if (!titulo || !req.files.img_principal || !contenido || !path_post) {
+
+        if (req.files?.img_principal) {
+            fileUtils.cleanTempFile(req.files.img_principal);
+        }
+
+        return res.status(400).send({ msg: "título, imagen, contenido y ruta obligatoria" });
     }
 
     try {
@@ -89,6 +85,11 @@ async function createPost(req, res){
         const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
 
         if (existingPost) {
+
+            if (req.files?.img_principal) {
+                fileUtils.cleanTempFile(req.files.img_principal);
+            }
+
             return res.status(400).send({ msg: "La ruta ya está registrada" });
         }
 
@@ -105,6 +106,11 @@ async function createPost(req, res){
 
         return res.status(200).send(newPost);
     } catch (error) {
+
+        if (req.files?.img_principal) {
+            fileUtils.cleanTempFile(req.files.img_principal);
+        }
+
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al crear la noticia" });
     }
@@ -116,6 +122,11 @@ async function updatePost(req, res) {
     let { titulo, contenido, path_post } = req.body;
     
     if (!posId) {
+
+        if (req.files?.img_principal) {
+            fileUtils.cleanTempFile(req.files.img_principal);
+        }
+
         return res.status(400).send({ msg: "posId no encontrado" });
     }
 
@@ -128,6 +139,11 @@ async function updatePost(req, res) {
         const post = await postRepository.findOne({ where: { pos_id: posId } });
 
         if (!post) {
+
+            if (req.files?.img_principal) {
+                fileUtils.cleanTempFile(req.files.img_principal);
+            }
+
             return res.status(404).send({ msg: "Post no encontrado" });
         }
 
@@ -136,6 +152,11 @@ async function updatePost(req, res) {
             // Verificar si el nuevo email ya esta registrado
             const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
             if (existingPost) {
+
+                if (req.files?.img_principal) {
+                    fileUtils.cleanTempFile(req.files.img_principal);
+                }
+
                 return res.status(400).send({ msg: "La ruta ya está registrada" });
             }
             post.pos_path = path_post.toLowerCase();
@@ -160,6 +181,11 @@ async function updatePost(req, res) {
 
         return res.status(200).send(post);
     } catch (error) {
+
+        if (req.files?.img_principal) {
+            fileUtils.cleanTempFile(req.files.img_principal);
+        }
+
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar la noticia" });
     }

@@ -64,20 +64,13 @@ async function createUser(req, res){
     rol = parseInt(rol)
 
     // Validaciones de campos obligatorios
-    if (!nombres) {
+    if (!nombres || !primer_apellido || !email || !password || isNaN(rol)) {
+
+        if (req.files?.avatar) {
+            fileUtils.cleanTempFile(req.files.avatar);
+        }
+
         return res.status(400).send({ msg: "nombre obligatorio" });
-    }
-    if (!primer_apellido) {
-        return res.status(400).send({ msg: "primer apellido obligatorio" });
-    }
-    if (!email) {
-        return res.status(400).send({ msg: "email obligatorio" });
-    }
-    if (!password) {
-        return res.status(400).send({ msg: "password obligatorio" });
-    }
-    if (isNaN(rol)) {
-        return res.status(400).send({ msg: "rol inválido" });
     }
 
     try {
@@ -85,12 +78,22 @@ async function createUser(req, res){
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
+
+            if (req.files?.avatar) {
+                fileUtils.cleanTempFile(req.files.avatar);
+            }
+
             return res.status(400).send({ msg: "El email ya está registrado" });
         }
 
         // Validar existencia del rol
         const tipoUsuario = await typeUserRepository.findOne({ where: { tus_id: rol } });
         if (!tipoUsuario) {
+
+            if (req.files?.avatar) {
+                fileUtils.cleanTempFile(req.files.avatar);
+            }
+
             return res.status(400).send({ msg: "El rol no existe" });
         }
 
@@ -117,6 +120,11 @@ async function createUser(req, res){
 
         return res.status(200).send(newUser);
     } catch (error) {
+
+        if (req.files?.avatar) {
+            fileUtils.cleanTempFile(req.files.avatar);
+        }
+
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al crear usuario" });
     }
@@ -128,6 +136,11 @@ async function updateUser(req, res) {
     let { nombres, primer_apellido, segundo_apellido, email, password, rol, activo } = req.body;
     
     if (!userId) {
+
+        if (req.files?.avatar) {
+            fileUtils.cleanTempFile(req.files.avatar);
+        }
+
         return res.status(400).send({ msg: "userId no encontrado" });
     }
 
@@ -143,6 +156,11 @@ async function updateUser(req, res) {
         const user = await userRepository.findOne({ where: { usu_id: userId } });
 
         if (!user) {
+
+            if (req.files?.avatar) {
+                fileUtils.cleanTempFile(req.files.avatar);
+            }
+
             return res.status(404).send({ msg: "Usuario no encontrado" });
         }
 
@@ -151,6 +169,11 @@ async function updateUser(req, res) {
             // Verificar si el nuevo email ya esta registrado
             const existingUser = await userRepository.findOne({ where: { usu_email: email } });
             if (existingUser) {
+
+                if (req.files?.avatar) {
+                    fileUtils.cleanTempFile(req.files.avatar);
+                }
+
                 return res.status(400).send({ msg: "El email ya está registrado" });
             }
             user.usu_email = email;
@@ -163,6 +186,11 @@ async function updateUser(req, res) {
         if (!isNaN(rol)) {
             const tipoUsuario = await typeUserRepository.findOne({ where: { tus_id: rol } });
             if (!tipoUsuario) {
+
+                if (req.files?.avatar) {
+                    fileUtils.cleanTempFile(req.files.avatar);
+                }
+
                 return res.status(400).send({ msg: "El rol no existe" });
             }
             user.tipo_usuario = tipoUsuario;
@@ -190,13 +218,16 @@ async function updateUser(req, res) {
             user.usu_avatar = fileUtils.generateFilePath(req.files.avatar, "usuarios/avatar");
         }
 
-
-
         // Guardar los cambios
         await userRepository.save(user);
 
         return res.status(200).send(user);
     } catch (error) {
+
+        if (req.files?.avatar) {
+            fileUtils.cleanTempFile(req.files.avatar);
+        }
+
         console.error(error);  // Agrega un log para ver detalles del error
         return res.status(400).send({ msg: "Error al actualizar usuario" });
     }

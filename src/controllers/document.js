@@ -44,14 +44,13 @@ async function createDocument(req, res) {
     orden = parseInt(orden);
 
     // Validaciones de campos obligatorios
-    if (!titulo) {
-        return res.status(400).send({ msg: "t?tulo obligatorio" });
-    }
-    if (!req.files?.documento) {
-        return res.status(400).send({ msg: "archivo obligatorio" });
-    }
-    if (isNaN(orden)) {
-        return res.status(400).send({ msg: "orden obligatorio" });
+    if (!titulo || !req.files?.documento || isNaN(orden)) {
+
+        if (req.files?.documento) {
+            fileUtils.cleanTempFile(req.files.documento);
+        }
+
+        return res.status(400).send({ msg: "título, archivo y orden obligatorio" });
     }
 
     try {
@@ -70,6 +69,11 @@ async function createDocument(req, res) {
 
         return res.status(200).send(newDocument);
     } catch (error) {
+
+        if (req.files?.documento) {
+            fileUtils.cleanTempFile(req.files.documento);
+        }
+
         console.error(error);
         return res.status(400).send({ msg: "Error al crear el documento" });
     }
@@ -80,6 +84,11 @@ async function updateDocument(req, res) {
     let { titulo, descripcion, orden } = req.body;
 
     if (!docId) {
+
+        if (req.files?.documento) {
+            fileUtils.cleanTempFile(req.files.documento);
+        }
+
         return res.status(400).send({ msg: "docId no encontrado" });
     }
 
@@ -91,6 +100,11 @@ async function updateDocument(req, res) {
         const document = await documentRepository.findOne({ where: { doc_id: docId } });
 
         if (!document) {
+
+            if (req.files?.documento) {
+                fileUtils.cleanTempFile(req.files.documento);
+            }
+
             return res.status(404).send({ msg: "Documento no encontrado" });
         }
 
@@ -115,6 +129,11 @@ async function updateDocument(req, res) {
 
         return res.status(200).send(document);
     } catch (error) {
+
+        if (req.files?.documento) {
+            fileUtils.cleanTempFile(req.files.documento);
+        }
+
         console.error(error);
         return res.status(400).send({ msg: "Error al actualizar el documento" });
     }

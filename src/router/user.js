@@ -4,7 +4,7 @@ const md_auth = require("../middlewares/authenticated");
 const multiparty = require("connect-multiparty");
 
 const api = express.Router();
-const md_upload = multiparty();  // Sin pasar el uploadDir aquí, ya que lo maneja el middleware
+const md_upload = multiparty();
 
 api.get("/user/me", [md_auth.asureAuth], UserController.getMe);
 api.get("/users", [md_auth.asureAuth], UserController.getUsers);

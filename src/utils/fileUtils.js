@@ -1,12 +1,10 @@
-// utils/filePath.js (o el archivo que uses)
-
 const path = require("path");
 const fs = require("fs");
 
 /**
- * Función para generar rutas dinámicas con año/mes.
+ * Funcion para generar rutas dinamicas con aÃ±o/mes.
  * @param {Object} file - El archivo que se va a guardar.
- * @param {string} folder - El nombre de la carpeta donde se almacenará el archivo (ej. "documentos").
+ * @param {string} folder - El nombre de la carpeta donde se almacenara el archivo (ej. "documentos").
  * @returns {string} - La ruta relativa para la base de datos.
  */
 function generateFilePathWithDate(file, folder) {
@@ -24,13 +22,15 @@ function generateFilePathWithDate(file, folder) {
         fs.mkdirSync(absoluteDir, { recursive: true });
     }
 
-    let finalName = `${baseName}${extension}`;
+    // Obtener fecha y hora actual como sufijo
+    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14); // YYYYMMDD_HHmmss
+    const finalName = `${baseName}_${dateSuffix}${extension}`;
     let finalPath = path.join(absoluteDir, finalName);
-    let counter = 1;
 
-    // Verifica si el archivo ya existe y le agrega un sufijo numérico si es necesario
+    let counter = 1;
+    // Verifica si el archivo ya existe y le agrega un sufijo numurico si es necesario
     while (fs.existsSync(finalPath)) {
-        finalName = `${baseName}_${counter}${extension}`;
+        finalName = `${baseName}_${dateSuffix}_${counter}${extension}`;
         finalPath = path.join(absoluteDir, finalName);
         counter++;
     }
@@ -41,44 +41,39 @@ function generateFilePathWithDate(file, folder) {
 }
 
 /** 
- * Genera la ruta, lo mismo que la anterior pero sin generar año/mes
+ * Genera la ruta, lo mismo que la anterior pero sin generar aÃ±o/mes.
+ * @param {Object} file - El archivo que se va a guardar.
+ * @param {string} folder - El nombre de la carpeta donde se almacenara el archivo.
+ * @returns {string} - La ruta relativa para la base de datos.
 */
 function generateFilePath(file, folder) {
     const originalName = path.basename(file.originalFilename);
     const extension = path.extname(originalName);
     const baseName = path.basename(originalName, extension).replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-    const relativeDir = path.join("uploads", folder); // Ruta base sin año ni mes
+    const relativeDir = path.join("uploads", folder); // Ruta base sin aÃ±o ni mes
     const absoluteDir = path.join(__dirname, "..", "..", relativeDir);
 
     if (!fs.existsSync(absoluteDir)) {
         fs.mkdirSync(absoluteDir, { recursive: true });
     }
 
-    let finalName = `${baseName}${extension}`;
+    // Obtener fecha y hora actual como sufijo
+    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14); // YYYYMMDD_HHmmss
+    const finalName = `${baseName}_${dateSuffix}${extension}`;
     let finalPath = path.join(absoluteDir, finalName);
-    let counter = 1;
 
-    // Verifica si el archivo ya existe y le agrega un sufijo numérico si es necesario
+    let counter = 1;
+    // Verifica si el archivo ya existe y le agrega un sufijo numurico si es necesario
     while (fs.existsSync(finalPath)) {
-        finalName = `${baseName}_${counter}${extension}`;
+        finalName = `${baseName}_${dateSuffix}_${counter}${extension}`;
         finalPath = path.join(absoluteDir, finalName);
         counter++;
     }
 
     fs.renameSync(file.path, finalPath);
 
-    return path.join(folder, finalName).replace(/\\/g, "/"); // Regresa la ruta relativa sin año ni mes
-}
-
-
-/**
- * Obtiene una ruta relativa corta desde el path del archivo subido (con multiparty).
- */
-function getFilePath(file) {
-    const filePath = file.path;
-    const fileSplit = filePath.split(/[\\/]/); // compatible con Windows y Linux
-    return `${fileSplit[fileSplit.length - 3]}/${fileSplit[fileSplit.length - 2]}/${fileSplit[fileSplit.length - 1]}`;
+    return path.join(folder, finalName).replace(/\\/g, "/"); // Regresa la ruta relativa sin aÃ±o ni mes
 }
 
 /**
@@ -94,10 +89,22 @@ function deleteFile(relativePath) {
     }
 }
 
+/**
+ * elimina el archivo tempora. Pensado para cuando el multiparty inserta el archivo pero ocurren errores
+ */
+function cleanTempFile(file) {
+    if (file?.path && fs.existsSync(file.path)) {
+        try {
+            fs.unlinkSync(file.path);
+        } catch (err) {
+            console.error("No se pudo eliminar archivo temporal:", err);
+        }
+    }
+}
 
 module.exports = {
     generateFilePathWithDate,
     generateFilePath,
-    getFilePath,
-    deleteFile
+    deleteFile,
+    cleanTempFile
 };

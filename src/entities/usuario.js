@@ -11,15 +11,15 @@ const { EntitySchema } = require("typeorm");
         },
         usu_nombres: {
             type: "varchar",
-            length: 255,
+            length: 100,
         },
         usu_primer_apellido: {
             type: "varchar",
-            length: 255,
+            length: 100,
         },
         usu_segundo_apellido: {
             type: "varchar",
-            length: 255,
+            length: 100,
         },
         usu_email: {
             type: "varchar",
@@ -55,7 +55,7 @@ const { EntitySchema } = require("typeorm");
         joinColumn: {
             name: "tus_id", // FK en la tabla usuarios
         },
-        eager: true, // opcional: carga automática la relación
+        eager: true, // opcional: carga automï¿½tica la relaciï¿½n
         },
     },
 });

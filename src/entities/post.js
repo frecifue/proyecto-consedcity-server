@@ -14,8 +14,7 @@ const PostEntity = new EntitySchema({
             length: 255,
         },
         pos_img_principal: {
-            type: "varchar",
-            length: 255,
+            type: "text",
         },
         pos_contenido: {
             type: "text",

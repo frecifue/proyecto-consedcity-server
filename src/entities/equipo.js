@@ -14,8 +14,7 @@ const EquipoEntity = new EntitySchema({
             length: 100,
         },
         equ_foto_perfil: {
-            type: "varchar",
-            length: 255,
+            type: "text",
         },
         equ_descripcion: {
             type: "varchar",

@@ -14,11 +14,11 @@ const DocumentEntity = new EntitySchema({
             length: 255,
         },
         doc_descripcion: {
-            type: "text",
+            type: "varchar",
+            length: 255,
         },
         doc_documento: {
-            type: "varchar",
-            length: 500,
+            type: "text",
         },
         doc_orden: {
             type: "int",
