@@ -3,8 +3,8 @@ const ImageGalleryController = require("../controllers/image_gallery");
 const md_auth = require("../middlewares/authenticated");
 const multiparty = require("connect-multiparty");
 
-const md_upload = multiparty({uploadDir: "./uploads/galeria_imagenes"})
 const api = express.Router();
+const md_upload = multiparty();  // Sin pasar el uploadDir aquí, ya que lo maneja el middleware
 
 api.get("/images_gallery", ImageGalleryController.getImagesGallery);
 api.get("/image_gallery", ImageGalleryController.getImageGallery);

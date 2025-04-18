@@ -1,12 +1,8 @@
 const { AppDataSource } = require("../data-source");
 const { DocumentEntity } = require("../entities/documentos");
-const { PostEntity } = require("../entities/post");
-const documentPath = require("../utils/documentPath");
-const fs = require("fs");
-const path = require("path");
+const fileUtils = require("../utils/fileUtils");
 
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
-const postRepository = AppDataSource.getRepository(PostEntity);
 
 async function getDocuments(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
@@ -66,10 +62,9 @@ async function createDocument(req, res) {
             doc_orden: orden
         });
 
-        if (req.files.documento) {
-            const finalPath = documentPath.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
-            newDocument.doc_documento = finalPath;
-        }
+        
+        newDocument.doc_documento = fileUtils.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
+        
 
         await documentRepository.save(newDocument);
 
@@ -108,23 +103,11 @@ async function updateDocument(req, res) {
         if (req.files && req.files.documento) {
             // Eliminar el archivo anterior si existe
             if (document.doc_documento) {
-                const oldFilePath = path.join(__dirname, "..", "uploads", document.doc_documento);
-                console.log("Ruta del archivo antiguo: ", oldFilePath);  // Verifica la ruta completa
-                
-                // Verificar si el archivo realmente existe
-                if (fs.existsSync(oldFilePath)) {
-                    fs.unlinkSync(oldFilePath); // Eliminar el archivo viejo
-                    console.log("Archivo eliminado exitosamente");
-                } else {
-                    console.log("El archivo no existe en la ruta: ", oldFilePath);  // Mostrar si no existe
-                }
+                fileUtils.deleteFile(document.doc_documento);
             }
 
             // Obtener la nueva ruta del archivo con la nueva funci?n
-            const finalPath = documentPath.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo documentos/2025/04/uuid.pdf
-
-            // Guardar la nueva ruta en la base de datos
-            document.doc_documento = finalPath;
+            document.doc_documento = fileUtils.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo documentos/2025/04/uuid.pdf
         }
 
         // Guardar el documento actualizado
@@ -153,16 +136,7 @@ async function deleteDocument(req, res) {
 
         // Eliminar el archivo asociado si existe
         if (document.doc_documento) {
-            const filePath = path.join(__dirname, "..", "uploads", document.doc_documento);
-            console.log("Ruta del archivo a eliminar: ", filePath); // Verifica la ruta completa
-
-            // Verificar si el archivo realmente existe
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath); // Eliminar el archivo
-                console.log("Archivo eliminado exitosamente");
-            } else {
-                console.log("El archivo no existe en la ruta: ", filePath);  // Mostrar si no existe
-            }
+            fileUtils.deleteFile(document.doc_documento);
         }
 
         // Eliminar el documento de la base de datos

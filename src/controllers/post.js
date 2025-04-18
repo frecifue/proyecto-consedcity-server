@@ -3,10 +3,8 @@ const { AppDataSource } = require("../data-source");
 const { PostEntity } = require("../entities/post");  // Importar el modelo User con TypeORM
 const { DocumentEntity } = require("../entities/documentos"); 
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
-const image = require("../utils/image");
-const fs = require("fs");
-const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
+const fileUtils = require("../utils/fileUtils");
 
 const postRepository = AppDataSource.getRepository(PostEntity);
 const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
@@ -74,10 +72,10 @@ async function createPost(req, res){
 
     // Validaciones de campos obligatorios
     if (!titulo) {
-        return res.status(400).send({ msg: "t�tulo obligatorio" });
+        return res.status(400).send({ msg: "título obligatorio" });
     }
     if (!req.files.img_principal) {
-        return res.status(400).send({ msg: "im�gen principal obligatoria" });
+        return res.status(400).send({ msg: "imágen principal obligatoria" });
     }
     if (!contenido) {
         return res.status(400).send({ msg: "contenido obligatorio" });
@@ -91,7 +89,7 @@ async function createPost(req, res){
         const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
 
         if (existingPost) {
-            return res.status(400).send({ msg: "La ruta ya est� registrada" });
+            return res.status(400).send({ msg: "La ruta ya está registrada" });
         }
 
         const newPost = postRepository.create({
@@ -100,9 +98,7 @@ async function createPost(req, res){
             pos_path: path_post
         });
 
-        if(req.files.img_principal){
-            newPost.pos_img_principal = image.getFilePath(req.files.img_principal)
-        }
+        newPost.pos_img_principal = fileUtils.generateFilePathWithDate(req.files.img_principal, "posts");
 
         // Guardar el nuevo post en la base de datos
         await postRepository.save(newPost);
@@ -140,7 +136,7 @@ async function updatePost(req, res) {
             // Verificar si el nuevo email ya est� registrado
             const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
             if (existingPost) {
-                return res.status(400).send({ msg: "La ruta ya est� registrada" });
+                return res.status(400).send({ msg: "La ruta ya está registrada" });
             }
             post.pos_path = path_post.toLowerCase();
         }
@@ -149,22 +145,14 @@ async function updatePost(req, res) {
         if (titulo) post.pos_titulo = titulo;
         if (contenido) post.pos_contenido = contenido;
 
-        // Si se proporciona un nuevo avatar, actualizarlo
+        // Verificar si el post tiene un img y eliminar el archivo
         if (req.files && req.files.img_principal) {
-            // Eliminar el avatar anterior si existe
+            // Eliminar file anterior si existe
             if (post.pos_img_principal) {
-                const imgPath = path.join(__dirname, "..", "uploads", post.pos_img_principal);
-                fs.unlink(imgPath, (err) => {
-                    if (err) {
-                        console.error("Error al eliminar la imagen principal anterior:", err);
-                    } else {
-                        console.log("imagen principal anterior eliminado");
-                    }
-                });
+                fileUtils.deleteFile(post.pos_img_principal);
             }
-
-            // Guardar el nuevo avatar
-            post.pos_img_principal = image.getFilePath(req.files.img_principal);
+            // Guardar nueva file
+            post.pos_img_principal = fileUtils.generateFilePathWithDate(req.files.img_principal, "posts"); 
         }
 
         // Guardar los cambios
@@ -193,21 +181,9 @@ async function deletePost(req, res) {
             return res.status(404).send({ msg: "Noticia no encontrada" });
         }
 
-        // Verificar si el post tiene un img y eliminar el archivo
+        // Eliminar file anterior si existe
         if (post.pos_img_principal) {
-            // Obtener la ruta relativa del avatar
-            const avatarPath = path.join(__dirname, "..", "uploads", post.pos_img_principal);
-
-            console.log("Intentando eliminar el archivo en: ", avatarPath);
-
-            // Eliminar el archivo de avatar
-            fs.unlink(avatarPath, (err) => {
-                if (err) {
-                    console.error("Error al eliminar la Imagen Principal:", err);
-                } else {
-                    console.log("Imagen Principal eliminado exitosamente");
-                }
-            });
+            fileUtils.deleteFile(post.pos_img_principal);
         }
 
         // Eliminar el post

@@ -1,12 +1,12 @@
 const { AppDataSource } = require("../data-source");
 const { UsuarioEntity } = require("../entities/usuario");  // Importar el modelo User con TypeORM
+const { TipoUsuarioEntity } = require("../entities/tipo_usuario");  // Importar el modelo User con TypeORM
 const bcrypt = require("bcryptjs");
-const image = require("../utils/image");
-const fs = require("fs");
-const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
+const fileUtils = require("../utils/fileUtils");
 
 const userRepository = AppDataSource.getRepository(UsuarioEntity);
+const typeUserRepository = AppDataSource.getRepository(TipoUsuarioEntity);
 
 async function getMe(req, res){
     const {usu_id} = req.user;
@@ -44,7 +44,7 @@ async function getUsers(req, res){
         }
 
         if (isNaN(isActive)) {
-            return res.status(400).send({ error: "El par�metro 'activo' debe ser 0 o 1" });
+            return res.status(400).send({ error: "El parámetro 'activo' debe ser 0 o 1" });
         }
         response = await userRepository.find({where: { usu_activo : isActive}});
     }
@@ -61,7 +61,7 @@ async function createUser(req, res){
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = trimLowerCase(rol)
+    rol = parseInt(rol)
 
     // Validaciones de campos obligatorios
     if (!nombres) {
@@ -76,8 +76,8 @@ async function createUser(req, res){
     if (!password) {
         return res.status(400).send({ msg: "password obligatorio" });
     }
-    if (!rol) {
-        return res.status(400).send({ msg: "rol obligatorio" });
+    if (isNaN(rol)) {
+        return res.status(400).send({ msg: "rol inválido" });
     }
 
     try {
@@ -85,7 +85,13 @@ async function createUser(req, res){
         const existingUser = await userRepository.findOne({ where: { usu_email: email } });
 
         if (existingUser) {
-            return res.status(400).send({ msg: "El email ya est� registrado" });
+            return res.status(400).send({ msg: "El email ya está registrado" });
+        }
+
+        // Validar existencia del rol
+        const tipoUsuario = await typeUserRepository.findOne({ where: { tus_id: rol } });
+        if (!tipoUsuario) {
+            return res.status(400).send({ msg: "El rol no existe" });
         }
 
         // Crear el nuevo usuario
@@ -97,13 +103,13 @@ async function createUser(req, res){
             usu_primer_apellido : primer_apellido,
             usu_segundo_apellido: segundo_apellido,
             usu_email           : email,
-            tipo_usuario        : { tus_id: rol },
+            tipo_usuario        : tipoUsuario,
             usu_activo          : 0,
             usu_password        : hashPassword,
         });
 
         if(req.files.avatar){
-            newUser.usu_avatar = image.getFilePath(req.files.avatar)
+            newUser.usu_avatar = fileUtils.generateFilePath(req.files.avatar, "usuarios/avatar");
         }
 
         // Guardar el nuevo usuario en la base de datos
@@ -130,7 +136,7 @@ async function updateUser(req, res) {
     segundo_apellido = trimLowerCase(segundo_apellido)
     email = trimLowerCase(email)
     password = password ? password.trim() : null;
-    rol = trimLowerCase(rol)
+    rol = parseInt(rol);
 
     try {
         // Verificar si el usuario existe
@@ -145,7 +151,7 @@ async function updateUser(req, res) {
             // Verificar si el nuevo email ya est� registrado
             const existingUser = await userRepository.findOne({ where: { usu_email: email } });
             if (existingUser) {
-                return res.status(400).send({ msg: "El email ya est� registrado" });
+                return res.status(400).send({ msg: "El email ya está registrado" });
             }
             user.usu_email = email;
         }
@@ -154,7 +160,13 @@ async function updateUser(req, res) {
         if (nombres) user.usu_nombres = nombres;
         if (primer_apellido) user.usu_primer_apellido = primer_apellido;
         if (segundo_apellido) user.usu_segundo_apellido = segundo_apellido;
-        if (rol) user.tipo_usuario = { tus_id: rol };
+        if (!isNaN(rol)) {
+            const tipoUsuario = await typeUserRepository.findOne({ where: { tus_id: rol } });
+            if (!tipoUsuario) {
+                return res.status(400).send({ msg: "El rol no existe" });
+            }
+            user.tipo_usuario = tipoUsuario;
+        }
     
         if (activo === "true" || activo === 1) {
             user.usu_activo = 1;
@@ -170,21 +182,15 @@ async function updateUser(req, res) {
 
         // Si se proporciona un nuevo avatar, actualizarlo
         if (req.files && req.files.avatar) {
-            // Eliminar el avatar anterior si existe
+            // Eliminar file anterior si existe
             if (user.usu_avatar) {
-                const avatarPath = path.join(__dirname, "..", "uploads", user.usu_avatar);
-                fs.unlink(avatarPath, (err) => {
-                    if (err) {
-                        console.error("Error al eliminar el avatar anterior:", err);
-                    } else {
-                        console.log("Avatar anterior eliminado");
-                    }
-                });
+                fileUtils.deleteFile(user.usu_avatar);
             }
 
-            // Guardar el nuevo avatar
-            user.usu_avatar = image.getFilePath(req.files.avatar);
+            user.usu_avatar = fileUtils.generateFilePath(req.files.avatar, "usuarios/avatar");
         }
+
+
 
         // Guardar los cambios
         await userRepository.save(user);
@@ -212,21 +218,9 @@ async function deleteUser(req, res) {
             return res.status(404).send({ msg: "Usuario no encontrado" });
         }
 
-        // Verificar si el usuario tiene un avatar y eliminar el archivo
+        // Eliminar file anterior si existe
         if (user.usu_avatar) {
-            // Obtener la ruta relativa del avatar
-            const avatarPath = path.join(__dirname, "..", "uploads", user.usu_avatar);
-
-            console.log("Intentando eliminar el archivo en: ", avatarPath);
-
-            // Eliminar el archivo de avatar
-            fs.unlink(avatarPath, (err) => {
-                if (err) {
-                    console.error("Error al eliminar el avatar:", err);
-                } else {
-                    console.log("Avatar eliminado exitosamente");
-                }
-            });
+            fileUtils.deleteFile(user.usu_avatar);
         }
 
         // Eliminar el usuario

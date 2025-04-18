@@ -1,9 +1,7 @@
 const express = require("express");
 const GeneralInfoController = require("../controllers/general_information");
 const md_auth = require("../middlewares/authenticated");
-// const multiparty = require("connect-multiparty");
 
-// const md_upload = multiparty({uploadDir: "./uploads/usuarios/avatar"})
 const api = express.Router();
 
 api.get("/general_info", GeneralInfoController.getGeneralInformation);

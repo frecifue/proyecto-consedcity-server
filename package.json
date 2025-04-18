@@ -10,7 +10,7 @@
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js",
     "db:create": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs db:create  -d src/data-source.js",
-    "seed:run": "node migration/seeds/index.js "  
+    "seed:run": "node migration/seeds/index.js "
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -1,14 +1,9 @@
 const { AppDataSource } = require("../data-source");
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes");  // Importar el modelo User con TypeORM
-const { PostEntity } = require("../entities/post");
-const image = require("../utils/image");
-const fs = require("fs");
-const path = require("path");
 const { trimLowerCase } = require("../utils/cleanInput");
-const { log } = require("console");
+const fileUtils = require("../utils/fileUtils");
 
 const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
-const postRepository = AppDataSource.getRepository(PostEntity);
 
 async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
@@ -73,8 +68,8 @@ async function createImageGallery(req, res){
             gim_orden: orden,
         });
 
-        newImageGallery.gim_imagen = image.getFilePath2(req.files.imagen)
-
+        newImageGallery.gim_imagen = fileUtils.generateFilePathWithDate(req.files.imagen, "galeria_imagenes");
+        
         await imageGalleryRepository.save(newImageGallery);
 
         return res.status(200).send(newImageGallery);
@@ -110,21 +105,12 @@ async function updateImageGallery(req, res) {
 
         // Si se proporciona una nueva imagen, actualizarlo
         if (req.files && req.files.imagen) {
-            // Eliminar el avatar anterior si existe
+            // Eliminar file anterior si existe
             if (imageGallery.gim_imagen) {
-                const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
-
-                fs.unlink(avatarPath, (err) => {
-                    if (err) {
-                        console.error("Error al eliminar la imagen anterior:", err);
-                    } else {
-                        console.log("Imagen anterior eliminado");
-                    }
-                });
+                fileUtils.deleteFile(imageGallery.gim_imagen);
             }
-
-            // Guardar el nuevo avatar
-            imageGallery.gim_imagen = image.getFilePath2(req.files.imagen);
+            // Guardar nueva fila
+            imageGallery.gim_imagen = fileUtils.generateFilePathWithDate(req.files.imagen, "galeria_imagenes"); // Ruta relativa tipo documentos/2025/04/uuid.pdf
         }
 
         // Guardar los cambios
@@ -136,85 +122,6 @@ async function updateImageGallery(req, res) {
         return res.status(400).send({ msg: "Error al actualizar imagen" });
     }
 }
-
-// async function deleteImageGallery(req, res) {
-//     const { gimId } = req.params;
-
-//     if (!gimId) {
-//         return res.status(400).send({ msg: "gimId no encontrada" });
-//     }
-
-//     const queryRunner = AppDataSource.createQueryRunner();
-
-//     await queryRunner.connect();
-//     await queryRunner.startTransaction();
-
-//     try {
-//         const queryImageGalleryRepository = queryRunner.manager.getRepository("GaleriaImagenesEntity");
-//         const queryPostRepository = queryRunner.manager.getRepository("PostEntity");
-
-//         // Buscar la imagen
-//         const imageGallery = await queryImageGalleryRepository.findOne({ where: { gim_id: gimId } });
-
-//         if (!imageGallery) {
-//             await queryRunner.rollbackTransaction();
-//             return res.status(404).send({ msg: "Imagen no encontrada" });
-//         }
-
-//         // Buscar posts que contienen esta imagen
-//         const postsWithImage = await queryPostRepository
-//             .createQueryBuilder("post")
-//             .leftJoin("post.imagenes", "imagenFiltro")
-//             .where("imagenFiltro.gim_id = :gimId", { gimId })
-//             .leftJoinAndSelect("post.imagenes", "imagenCompleta")
-//             .getMany();
-
-//         for (const post of postsWithImage) {
-//             post.imagenes = post.imagenes.filter(img => img.gim_id !== parseInt(gimId));
-//             await queryPostRepository.save(post);
-//         }
-
-//         // verificamos si la imagen sigue en uso en otras noticias
-//         const stillUsed = await queryPostRepository
-//             .createQueryBuilder("post")
-//             .leftJoin("post.imagenes", "imagen")
-//             .where("imagen.gim_id = :gimId", { gimId })
-//             .getCount();
-
-//         if (stillUsed === 0) {
-//             // Eliminar archivo del sistema
-//             if (imageGallery.gim_imagen) {
-//                 const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
-//                 console.log("Intentando eliminar el archivo en: ", avatarPath);
-
-//                 fs.unlink(avatarPath, (err) => {
-//                     if (err) {
-//                         console.error("Error al eliminar la imagen del disco:", err);
-//                     } else {
-//                         console.log("Archivo eliminado exitosamente del disco");
-//                     }
-//                 });
-//             }
-
-//             await queryImageGalleryRepository.remove(imageGallery);
-//             await queryRunner.commitTransaction();
-//             return res.status(200).send({ msg: "Imagen eliminada correctamente" });
-//         } else {
-//             // Si a�n se usa en otros posts, revertimos todo
-//             await queryRunner.rollbackTransaction();
-//             return res.status(400).send({
-//                 msg: "No se puede eliminar la imagen porque sigue en uso por otras noticias"
-//             });
-//         }
-
-//     } catch (error) {
-//         await queryRunner.rollbackTransaction();
-//         console.error(error);
-//         return res.status(400).send({ msg: "Error al eliminar imagen", error: error.message });
-//     } finally {
-//         await queryRunner.release();
-//     }
-// }
 
 async function deleteImageGallery(req, res) {
     const { gimId } = req.params;
@@ -231,21 +138,9 @@ async function deleteImageGallery(req, res) {
             return res.status(404).send({ msg: "Imagen no encontrada" });
         }
 
-        // Verificar si la imgen tiene un file y eliminar el archivo
+        // Eliminar file anterior si existe
         if (imageGallery.gim_imagen) {
-            // Obtener la ruta relativa del avatar
-            const avatarPath = path.join(__dirname, "..", "uploads", imageGallery.gim_imagen);
-
-            console.log("Intentando eliminar el archivo en: ", avatarPath);
-
-            // Eliminar el archivo de avatar
-            fs.unlink(avatarPath, (err) => {
-                if (err) {
-                    console.error("Error al eliminar la imagen:", err);
-                } else {
-                    console.log("Imagen eliminado exitosamente");
-                }
-            });
+            fileUtils.deleteFile(imageGallery.gim_imagen);
         }
 
         // Eliminar la imagen

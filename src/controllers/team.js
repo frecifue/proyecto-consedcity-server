@@ -1,8 +1,6 @@
 const { AppDataSource } = require("../data-source");
 const { EquipoEntity } = require("../entities/equipo");  // Importar el modelo User con TypeORM
-const image = require("../utils/image");
-const fs = require("fs");
-const path = require("path");
+const fileUtils = require("../utils/fileUtils");
 
 const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
@@ -44,9 +42,7 @@ async function createTeam(req, res){
             equ_orden: orden
         });
 
-        if(req.files.foto_perfil){
-            newTeam.equ_foto_perfil = image.getFilePath(req.files.foto_perfil)
-        }
+        newTeam.equ_foto_perfil = fileUtils.generateFilePath(req.files.foto_perfil, "team/foto_perfil");
 
         // Guardar el nuevo equipo en la base de datos
         await teamRepository.save(newTeam);
@@ -86,20 +82,12 @@ async function updateTeam(req, res) {
 
         // Si se proporciona un nuevo avatar, actualizarlo
         if (req.files && req.files.foto_perfil) {
-            // Eliminar el avatar anterior si existe
+            // Eliminar file anterior si existe
             if (equipo.equ_foto_perfil) {
-                const imgPath = path.join(__dirname, "..", "uploads", equipo.equ_foto_perfil);
-                fs.unlink(imgPath, (err) => {
-                    if (err) {
-                        console.error("Error al eliminar la foto perfil anterior:", err);
-                    } else {
-                        console.log("foto perfil anterior eliminado");
-                    }
-                });
+                fileUtils.deleteFile(equipo.equ_foto_perfil);
             }
-
-            // Guardar el nuevo avatar
-            equipo.equ_foto_perfil = image.getFilePath(req.files.foto_perfil);
+            
+            equipo.equ_foto_perfil = fileUtils.generateFilePath(req.files.foto_perfil, "team/foto_perfil");
         }
 
         // Guardar los cambios
@@ -128,21 +116,8 @@ async function deleteTeam(req, res) {
             return res.status(404).send({ msg: "Miembro del equipo no encontrado" });
         }
 
-        // Verificar si el equipo tiene un img y eliminar el archivo
         if (equipo.equ_foto_perfil) {
-            // Obtener la ruta relativa del avatar
-            const avatarPath = path.join(__dirname, "..", "uploads", equipo.equ_foto_perfil);
-
-            console.log("Intentando eliminar el archivo en: ", avatarPath);
-
-            // Eliminar el archivo de avatar
-            fs.unlink(avatarPath, (err) => {
-                if (err) {
-                    console.error("Error al eliminar la Foto Perfil:", err);
-                } else {
-                    console.log("foto Perfil eliminado exitosamente");
-                }
-            });
+            fileUtils.deleteFile(equipo.equ_foto_perfil);
         }
 
         // Eliminar el equipo
