@@ -14,20 +14,19 @@ async function getImagesGallery(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
     
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a n�mero
-        const limitNumber = parseInt(limit, 10); // Convertir a n�mero
+        const pageNumber = parseInt(page, 10); 
+        const limitNumber = parseInt(limit, 10); 
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
             return res.status(400).send({ msg: "Los par�metros 'page' y 'limit' deben ser n�meros v�lidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // C�lculo correcto
+        const skip = (pageNumber - 1) * limitNumber; 
 
         const [images, total] = await imageGalleryRepository.findAndCount({
             skip,
             take: limitNumber,
-            order: { gim_created_at: "DESC" },
-            relations: ["posts"]
+            order: { gim_orden: "ASC" }
         });
 
         return res.status(200).send({

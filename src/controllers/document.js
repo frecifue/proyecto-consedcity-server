@@ -24,7 +24,7 @@ async function getDocuments(req, res) {
         const [documents, total] = await documentRepository.findAndCount({
             skip,
             take: limitNumber,
-            order: { doc_created_at: "DESC" },
+            order: { doc_orden: "ASC" },
         });
 
         return res.status(200).send({
@@ -102,6 +102,7 @@ async function updateDocument(req, res) {
         // Actualizaci?n de los campos
         if (titulo) document.doc_titulo = titulo;
         if (descripcion) document.doc_descripcion = descripcion;
+        if (orden) document.doc_orden = orden;
 
         // Si se proporciona un nuevo archivo
         if (req.files && req.files.documento) {
