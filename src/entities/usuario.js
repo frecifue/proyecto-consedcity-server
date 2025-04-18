@@ -11,19 +11,19 @@ const { EntitySchema } = require("typeorm");
         },
         usu_nombres: {
             type: "varchar",
-            length: 100,
+            length: 50,
         },
         usu_primer_apellido: {
             type: "varchar",
-            length: 100,
+            length: 50,
         },
         usu_segundo_apellido: {
             type: "varchar",
-            length: 100,
+            length: 50,
         },
         usu_email: {
             type: "varchar",
-            length: 255,
+            length: 50,
             unique: true,
         },
         usu_password: {

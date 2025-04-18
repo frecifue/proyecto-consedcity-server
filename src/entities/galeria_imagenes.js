@@ -11,7 +11,7 @@ const GaleriaImagenesEntity = new EntitySchema({
         },
         gim_nombre: {
             type: "varchar",
-            length: 255,
+            length: 100,
         },
         gim_imagen: {
             type: "text", 

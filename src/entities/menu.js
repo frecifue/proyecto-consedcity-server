@@ -11,7 +11,7 @@ const MenuEntity = new EntitySchema({
         },
         men_titulo: {
             type: "varchar",
-            length: 255,
+            length: 50,
         },
         men_path: {
             type: "varchar",
