@@ -14,11 +14,11 @@ async function getPosts(req, res) {
     const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
 
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a n�mero
-        const limitNumber = parseInt(limit, 10); // Convertir a n�mero
+        const pageNumber = parseInt(page, 10); // Convertir a numero
+        const limitNumber = parseInt(limit, 10); // Convertir a numero
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser n�meros v�lidos" });
+            return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser números válidos" });
         }
 
         const skip = (pageNumber - 1) * limitNumber; // Calculo correcto
@@ -131,9 +131,9 @@ async function updatePost(req, res) {
             return res.status(404).send({ msg: "Post no encontrado" });
         }
 
-        // Verificar si se proporciona un nuevo path y si ya est� registrado
+        // Verificar si se proporciona un nuevo path y si ya esta registrado
         if (path_post && path_post !== post.pos_path) {
-            // Verificar si el nuevo email ya est� registrado
+            // Verificar si el nuevo email ya esta registrado
             const existingPost = await postRepository.findOne({ where: { pos_path: path_post } });
             if (existingPost) {
                 return res.status(400).send({ msg: "La ruta ya está registrada" });
@@ -187,7 +187,7 @@ async function deletePost(req, res) {
         }
 
         // Eliminar el post
-        await postRepository.remove(post); // Usar el m�todo remove del repositorio
+        await postRepository.remove(post); // Usar el metodo remove del repositorio
 
         return res.status(200).send({ msg: "Noticia eliminado exitosamente" });
     } catch (error) {

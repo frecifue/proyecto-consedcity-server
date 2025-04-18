@@ -33,7 +33,7 @@ async function getUsers(req, res){
     if(activo === undefined){
         response = await userRepository.find();
     }else{
-        // Convertir el par�metro a un valor num�rico v�lido (0 o 1)
+        // Convertir el parametro a un valor numurico valido (0 o 1)
         let isActive;
         if (activo === "true") {
             isActive = 1;
@@ -146,9 +146,9 @@ async function updateUser(req, res) {
             return res.status(404).send({ msg: "Usuario no encontrado" });
         }
 
-        // Verificar si se proporciona un nuevo email y si ya est� registrado
+        // Verificar si se proporciona un nuevo email y si ya esta registrado
         if (email && email !== user.usu_email) {
-            // Verificar si el nuevo email ya est� registrado
+            // Verificar si el nuevo email ya esta registrado
             const existingUser = await userRepository.findOne({ where: { usu_email: email } });
             if (existingUser) {
                 return res.status(400).send({ msg: "El email ya está registrado" });
@@ -224,7 +224,7 @@ async function deleteUser(req, res) {
         }
 
         // Eliminar el usuario
-        await userRepository.remove(user); // Usar el m�todo remove del repositorio
+        await userRepository.remove(user); // Usar el metodo remove del repositorio
 
         return res.status(200).send({ msg: "Usuario eliminado exitosamente" });
     } catch (error) {

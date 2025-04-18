@@ -22,7 +22,7 @@ async function startServer() {
         });
 
     } catch (error) {
-        console.error("? Error de conexi�n a la base de datos:", error);
+        console.error("? Error de conexión a la base de datos:", error);
     }
 }
 

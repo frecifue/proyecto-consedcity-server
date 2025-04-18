@@ -7,3 +7,4 @@ logs/
 mysql_data/
 
 uploads/ 
+.vscode/

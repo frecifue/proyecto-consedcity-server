@@ -13,7 +13,7 @@ async function getImagesGallery(req, res) {
         const limitNumber = parseInt(limit, 10); 
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los par�metros 'page' y 'limit' deben ser n�meros v�lidos" });
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
         const skip = (pageNumber - 1) * limitNumber; 
@@ -33,7 +33,7 @@ async function getImagesGallery(req, res) {
         });
     } catch (error) {
         console.error(error);
-        return res.status(400).send({ msg: "Error al obtener la galeria de im�genes" });
+        return res.status(400).send({ msg: "Error al obtener la galeria de imágenes" });
     }
 }
 
@@ -144,7 +144,7 @@ async function deleteImageGallery(req, res) {
         }
 
         // Eliminar la imagen
-        await imageGalleryRepository.remove(imageGallery); // Usar el m�todo remove del repositorio
+        await imageGalleryRepository.remove(imageGallery); // Usar el metodo remove del repositorio
 
         return res.status(200).send({ msg: "Imagen eliminado exitosamente" });
     } catch (error) {

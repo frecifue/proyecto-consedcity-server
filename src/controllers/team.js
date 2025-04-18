@@ -121,7 +121,7 @@ async function deleteTeam(req, res) {
         }
 
         // Eliminar el equipo
-        await teamRepository.remove(equipo); // Usar el m�todo remove del repositorio
+        await teamRepository.remove(equipo); // Usar el metodo remove del repositorio
 
         return res.status(200).send({ msg: "Miembro del equipo eliminado exitosamente" });
     } catch (error) {
