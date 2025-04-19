@@ -96,6 +96,7 @@ function cleanTempFile(file) {
     if (file?.path && fs.existsSync(file.path)) {
         try {
             fs.unlinkSync(file.path);
+            console.log("el archivo temporal ha sido eliminado");
         } catch (err) {
             console.error("No se pudo eliminar archivo temporal:", err);
         }
