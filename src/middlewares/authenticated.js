@@ -2,7 +2,7 @@ const jwt = require("../utils/jwt")
 
 function asureAuth(req, res, next){
     if(!req.headers.authorization){
-        return res.status(403).send({ msg: "La petición no tiene la cabecera de autenticación" });
+        return res.status(403).send({ msg: "La peticiÃ³n no tiene la cabecera de autenticaciÃ³n" });
     }
 
     const token = req.headers.authorization.replace("Bearer ", "");

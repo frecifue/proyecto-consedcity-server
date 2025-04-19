@@ -55,7 +55,7 @@ const { EntitySchema } = require("typeorm");
         joinColumn: {
             name: "tus_id", // FK en la tabla usuarios
         },
-        eager: true, // opcional: carga autom�tica la relaci�n
+        eager: true, // opcional: carga automatica la relacion
         },
     },
 });
