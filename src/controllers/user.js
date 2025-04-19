@@ -196,9 +196,9 @@ async function updateUser(req, res) {
             user.tipo_usuario = tipoUsuario;
         }
     
-        if (activo === "true" || activo === 1) {
+        if (["true", true, 1, "1"].includes(activo)) {
             user.usu_activo = 1;
-        } else if (activo === "false" || activo === 0) {
+        } else if (["false", false, 0, "0"].includes(activo)) {
             user.usu_activo = 0;
         }
     

@@ -34,7 +34,7 @@ async function getMenus(req, res){
 }
 
 async function createMenu(req, res){
-    let { titulo, path, orden, activo } = req.body;
+    let { titulo, path, orden } = req.body;
     
     titulo = (titulo || "").trim();
     path = trimLowerCase(path)
@@ -64,7 +64,7 @@ async function createMenu(req, res){
             men_titulo: titulo,
             men_path: path,
             men_orden: orden,
-            men_activo: (typeof activo === 'boolean') ? (activo ? 1 : 0) : 0,
+            men_activo: 0,
         });
 
         await menuRepository.save(newMenu);
@@ -112,15 +112,10 @@ async function updateMenu(req, res) {
         // Actualizar los campos del menu si se proporcionan
         if (titulo) menu.men_titulo = titulo;
         if (!isNaN(orden)) menu.men_orden = orden;
-        if (activo === "true" || activo === true) {
+        
+        if (["true", true, 1, "1"].includes(activo)) {
             menu.men_activo = 1;
-        } else if (activo === "false" || activo === false) {
-            menu.men_activo = 0;
-        } else {
-            menu.men_activo = parseInt(activo, 10);
-        }
-    
-        if (isNaN(menu.men_activo) || (menu.men_activo !== 1 && menu.men_activo !== 0)) {
+        } else if (["false", false, 0, "0"].includes(activo)) {
             menu.men_activo = 0;
         }
 
