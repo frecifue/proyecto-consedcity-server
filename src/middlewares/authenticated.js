@@ -6,7 +6,6 @@ function asureAuth(req, res, next){
     }
 
     const token = req.headers.authorization.replace("Bearer ", "");
-    // console.log(token);
 
     try {
         const payload = jwt.decoded(token);
