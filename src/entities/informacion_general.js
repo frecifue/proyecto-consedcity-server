@@ -10,25 +10,32 @@ const InformacionGeneralEntity = new EntitySchema({
             generated: true, // Autoincremental
         },
         ing_quienes_somos: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_mision: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_vision: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_nuestro_trabajo: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_nuestro_trabajo_difusion: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_nuestro_trabajo_formacion: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_nuestro_trabajo_investigacion: {
-            type: "text",
+            type: "varchar",
+            length: 500,
         },
         ing_created_at: {
             type: "timestamp",
