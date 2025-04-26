@@ -7,7 +7,7 @@ function createAccessToken(user){
 
     const payload = {
         token_type: "access",
-        usu_id: user._id,
+        usu_id: user.usu_id,
         iat: Date.now(),
         exp: expToken.getTime(),
     };
@@ -21,7 +21,7 @@ function createRefreshToken(user){
 
     const payload = {
         token_type: "refresh",
-        usu_id: user._id,
+        usu_id: user.usu_id,
         iat: Date.now(),
         exp: expToken.getTime(),
     };

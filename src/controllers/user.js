@@ -8,23 +8,27 @@ const fileUtils = require("../utils/fileUtils");
 const userRepository = AppDataSource.getRepository(UsuarioEntity);
 const typeUserRepository = AppDataSource.getRepository(TipoUsuarioEntity);
 
-async function getMe(req, res){
-    const {usu_id} = req.user;
-
+async function getMe(req, res) {
     try {
-        // Verificar si el email ya existe
+        const { usu_id } = req.user || {}; // Evita que truene si req.user es undefined
+
+        if (!usu_id) {
+            return res.status(400).send({ msg: "usu_id no proporcionado" });
+        }
+
         const existingUser = await userRepository.findOne({ where: { usu_id } });
 
         if (!existingUser) {
-            return res.status(400).send({ msg: "usuario no encontrado" });
+            return res.status(404).send({ msg: "Usuario no encontrado" });
         }
 
         return res.status(200).send(existingUser);
     } catch (error) {
-        console.error(error);  // Agrega un log para ver detalles del error
+        console.error(error);
         return res.status(500).send({ msg: "Error al obtener usuario" });
     }
 }
+
 
 async function getUsers(req, res){
     const {activo} = req.query;
