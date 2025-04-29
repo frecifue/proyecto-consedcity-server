@@ -6,15 +6,41 @@ const { API_VERSION } = require("./constants");
 const app = express();
 
 // Seguridad HTTP
-app.use(helmet());
+// app.use(helmet({
+//   crossOriginEmbedderPolicy: false,
+//   contentSecurityPolicy: false, // o personaliza si quieres más control
+// }));
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+// cors
+
+// Obtener los orígenes permitidos desde las variables de entorno
+const allowedOrigins = [
+  process.env.FRONTEND_URL, 
+  process.env.BACKEND_URL 
+];
+
+
+// app.use(cors({
+//   origin: function(origin, callback) {
+//     // Si no hay origen (es una solicitud desde el backend, por ejemplo), permite
+//     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+//       return callback(null, true);
+//     }
+//     return callback(new Error('No permitido por CORS'), false);
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true // Si estás usando cookies o autenticación
+// }));
 app.use(cors());
 
 // Carpeta estática
-app.use("/uploads", express.static("uploads"));
+app.use(express.static("uploads"));
 
 // Rutas
 const authRoutes = require("./router/auth");
