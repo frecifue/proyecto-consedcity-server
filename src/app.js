@@ -1,10 +1,22 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const { API_VERSION } = require("./constants");
 
 const app = express();
 
-// import routings
+// Seguridad HTTP
+app.use(helmet());
+
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
+// Carpeta estática
+app.use("/uploads", express.static("uploads"));
+
+// Rutas
 const authRoutes = require("./router/auth");
 const userRoutes = require("./router/user");
 const menuRoutes = require("./router/menu");
@@ -14,22 +26,8 @@ const teamRoutes = require("./router/team");
 const contactRoutes = require("./router/contact");
 const imageGalleryRoutes = require("./router/image_gallery");
 const documentRoutes = require("./router/document");
-
-// mantenedores
 const typeUserRoutes = require("./router/type_user");
 
-// ?? Middlewares
-app.use(express.json()); // Reemplaza body-parser.json()
-app.use(express.urlencoded({ extended: true })); // Reemplaza body-parser.urlencoded()
-
-// configure static folder
-app.use(express.static("uploads"));
-
-// ?? Configurar CORS
-app.use(cors());
-
-// ?? Importar y configurar rutas (descomenta y agrega las tuyas)
-// const userRoutes = require("./routes/user");
 app.use(`/api/${API_VERSION}`, authRoutes);
 app.use(`/api/${API_VERSION}`, userRoutes);
 app.use(`/api/${API_VERSION}`, menuRoutes);
@@ -41,11 +39,17 @@ app.use(`/api/${API_VERSION}`, imageGalleryRoutes);
 app.use(`/api/${API_VERSION}`, documentRoutes);
 app.use(`/api/${API_VERSION}`, typeUserRoutes);
 
+// Ruta raíz
+if (process.env.NODE_ENV !== "production") {
+  app.get("/", (req, res) => {
+    res.send("Bienvenido a la API REST de Proyecto Consedcity");
+  });
+}
 
-// ?? Mensaje de bienvenida
-app.get("/", (req, res) => {
-    res.send("?? Bienvenido a la API REST de Proyecto Consedcity");
+// Middleware de errores
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Error interno del servidor" });
 });
 
 module.exports = app;
-
