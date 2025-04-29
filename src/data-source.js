@@ -8,11 +8,11 @@ const AppDataSource = new DataSource({
     database: process.env.DB_NAME,
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    logging: process.env.NODE_ENV === 'development', // Solo habilitar logging en desarrollo
+    logging: false,
     entities: ["./src/entities/**/*.js"],
     // synchronize: process.env.NODE_ENV !== 'production',
     synchronize: false,
-    debug: process.env.NODE_ENV === 'development', // Solo habilitar en desarrollo
+    debug: false,
     seeds: ['./migration/seeds/**/*{.ts,.js}'],
     seedTracking: false,
 });
