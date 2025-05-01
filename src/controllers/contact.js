@@ -1,11 +1,12 @@
 const nodemailer = require('nodemailer');
 const sanitizeHtml = require('sanitize-html');
 const validator = require('validator');
+require('dotenv').config(); // Asegúrate de cargar las variables de entorno
 
 async function contact(req, res) {
     let { nombre_contacto, email_contacto, mensaje_contacto } = req.body;
 
-    // Aplicar trim y sanitizaci�n
+    // Aplicar trim y sanitización
     nombre_contacto = sanitizeHtml(nombre_contacto?.trim());
     email_contacto = sanitizeHtml(email_contacto?.trim());
     mensaje_contacto = sanitizeHtml(mensaje_contacto?.trim());
@@ -26,14 +27,16 @@ async function contact(req, res) {
     if (nombre_contacto.length > 100) {
         return res.status(400).json({ msg: "El nombre es demasiado largo" });
     }
-    
+
     if (mensaje_contacto.length > 1000) {
         return res.status(400).json({ msg: "El mensaje es demasiado largo" });
     }
 
-    // Crea un transporte para Nodemailer
+    // Configurar transporte SMTP explícitamente
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587, // Cambia de 465 a 587
+        secure: false, // false para el puerto 587 (STARTTLS)
         auth: {
             user: process.env.NODEMAILER_EMAIL_USER,
             pass: process.env.NODEMAILER_EMAIL_PASS,
@@ -41,20 +44,14 @@ async function contact(req, res) {
     });
 
     try {
-        // Configuración del correo
         const mailOptions = {
-            from: `Web Consedcity <${process.env.NODEMAILER_EMAIL_USER}>`, // Usar tu propio correo
-            replyTo: email_contacto, // Permitir respuestas al remitente real
+            from: `Web Consedcity <${process.env.NODEMAILER_EMAIL_USER}>`,
+            replyTo: email_contacto,
             to: process.env.NODEMAILER_EMAIL_USER,
             subject: `Web Consedcity - Mensaje de contacto de: ${nombre_contacto}`,
-            text: `
-                Nombre: ${nombre_contacto}
-                Correo: ${email_contacto}
-                Mensaje: ${mensaje_contacto}
-            `,
+            text: `Nombre: ${nombre_contacto}\nCorreo: ${email_contacto}\nMensaje: ${mensaje_contacto}`,
         };
 
-        // Enviar correo
         await transporter.sendMail(mailOptions);
         return res.status(200).json({ msg: 'Correo enviado con éxito' });
     } catch (error) {

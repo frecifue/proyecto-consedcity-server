@@ -22,58 +22,58 @@ function generateFilePathWithDate(file, folder) {
         fs.mkdirSync(absoluteDir, { recursive: true });
     }
 
-    // Obtener fecha y hora actual como sufijo
-    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14); // YYYYMMDD_HHmmss
-    const finalName = `${baseName}_${dateSuffix}${extension}`;
+    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14);
+    let finalName = `${baseName}_${dateSuffix}${extension}`;
     let finalPath = path.join(absoluteDir, finalName);
 
     let counter = 1;
-    // Verifica si el archivo ya existe y le agrega un sufijo numurico si es necesario
     while (fs.existsSync(finalPath)) {
         finalName = `${baseName}_${dateSuffix}_${counter}${extension}`;
         finalPath = path.join(absoluteDir, finalName);
         counter++;
     }
 
-    fs.renameSync(file.path, finalPath);
+    // 🔄 Cambio aquí: copiar y luego borrar el archivo temporal
+    fs.copyFileSync(file.path, finalPath);
+    fs.unlinkSync(file.path);
 
     return path.join(folder, year.toString(), month, finalName).replace(/\\/g, "/");
 }
 
-/** 
+/**
  * Genera la ruta, lo mismo que la anterior pero sin generar año/mes.
  * @param {Object} file - El archivo que se va a guardar.
  * @param {string} folder - El nombre de la carpeta donde se almacenara el archivo.
  * @returns {string} - La ruta relativa para la base de datos.
-*/
+ */
 function generateFilePath(file, folder) {
     const originalName = path.basename(file.originalFilename);
     const extension = path.extname(originalName);
     const baseName = path.basename(originalName, extension).replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-    const relativeDir = path.join("uploads", folder); // Ruta base sin año ni mes
+    const relativeDir = path.join("uploads", folder);
     const absoluteDir = path.join(__dirname, "..", "..", relativeDir);
 
     if (!fs.existsSync(absoluteDir)) {
         fs.mkdirSync(absoluteDir, { recursive: true });
     }
 
-    // Obtener fecha y hora actual como sufijo
-    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14); // YYYYMMDD_HHmmss
-    const finalName = `${baseName}_${dateSuffix}${extension}`;
+    const dateSuffix = new Date().toISOString().replace(/[-:.T]/g, "").slice(0, 14);
+    let finalName = `${baseName}_${dateSuffix}${extension}`;
     let finalPath = path.join(absoluteDir, finalName);
 
     let counter = 1;
-    // Verifica si el archivo ya existe y le agrega un sufijo numurico si es necesario
     while (fs.existsSync(finalPath)) {
         finalName = `${baseName}_${dateSuffix}_${counter}${extension}`;
         finalPath = path.join(absoluteDir, finalName);
         counter++;
     }
 
-    fs.renameSync(file.path, finalPath);
+    // 🔄 Cambio aquí: copiar y luego borrar el archivo temporal
+    fs.copyFileSync(file.path, finalPath);
+    fs.unlinkSync(file.path);
 
-    return path.join(folder, finalName).replace(/\\/g, "/"); // Regresa la ruta relativa sin año ni mes
+    return path.join(folder, finalName).replace(/\\/g, "/");
 }
 
 /**
@@ -90,13 +90,13 @@ function deleteFile(relativePath) {
 }
 
 /**
- * elimina el archivo tempora. Pensado para cuando el multiparty inserta el archivo pero ocurren errores
+ * elimina el archivo temporal. Pensado para cuando el multiparty inserta el archivo pero ocurren errores
  */
 function cleanTempFile(file) {
     if (file?.path && fs.existsSync(file.path)) {
         try {
             fs.unlinkSync(file.path);
-            console.log("el archivo temporal ha sido eliminado");
+            console.log("El archivo temporal ha sido eliminado");
         } catch (err) {
             console.error("No se pudo eliminar archivo temporal:", err);
         }
