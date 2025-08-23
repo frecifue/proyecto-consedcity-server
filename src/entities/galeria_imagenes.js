@@ -19,6 +19,10 @@ const GaleriaImagenesEntity = new EntitySchema({
         gim_orden: {
             type: "int",
         },
+        gim_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         gim_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",

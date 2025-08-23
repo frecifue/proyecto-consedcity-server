@@ -23,6 +23,10 @@ const EquipoEntity = new EntitySchema({
         equ_orden: {
             type: "int",
         },
+        equ_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         equ_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",

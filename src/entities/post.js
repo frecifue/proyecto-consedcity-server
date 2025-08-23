@@ -23,6 +23,10 @@ const PostEntity = new EntitySchema({
             type: "varchar",
             length: 255,
         },
+        pos_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         pos_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",

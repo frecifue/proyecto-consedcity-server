@@ -64,11 +64,23 @@ async function getPost(req, res) {
 
 
 async function createPost(req, res){
-    let { titulo, contenido, path_post } = req.body;
+    let { titulo, contenido, path_post, en_home } = req.body;
     
     titulo = (titulo || "").trim();
     contenido = (contenido || "").trim();
     path_post = trimLowerCase(path_post);
+
+    // Validación de en_home
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = parseInt(en_home);
+        if (![0,1].includes(en_home)) {
+            en_home = 0;
+        }
+    }
 
     // Validaciones de campos obligatorios
     if (!titulo || !req.files.img_principal || !contenido || !path_post) {
@@ -96,7 +108,8 @@ async function createPost(req, res){
         const newPost = postRepository.create({
             pos_titulo: titulo,
             pos_contenido: contenido,
-            pos_path: path_post
+            pos_path: path_post,
+            pos_en_home: en_home
         });
 
         newPost.pos_img_principal = fileUtils.generateFilePathWithDate(req.files.img_principal, "posts");
@@ -119,7 +132,7 @@ async function createPost(req, res){
 
 async function updatePost(req, res) {
     const { posId } = req.params;
-    let { titulo, contenido, path_post } = req.body;
+    let { titulo, contenido, path_post, en_home } = req.body;
     
     if (!posId) {
 
@@ -133,6 +146,18 @@ async function updatePost(req, res) {
     titulo = (titulo || "").trim();
     contenido = (contenido || "").trim();
     path_post = trimLowerCase(path_post);
+
+    // --- NUEVO: Validación y normalización de en_home ---
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "string") {
+        en_home = en_home === "1" || en_home.toLowerCase() === "true" ? 1 : 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = en_home ? 1 : 0;
+    }
+    // --- FIN NUEVO ---
 
     try {
         // Verificar si el post existe
@@ -165,6 +190,7 @@ async function updatePost(req, res) {
         // Actualizar los campos del post si se proporcionan
         if (titulo) post.pos_titulo = titulo;
         if (contenido) post.pos_contenido = contenido;
+        post.pos_en_home = en_home; // <-- agregado en_home
 
         // Verificar si el post tiene un img y eliminar el archivo
         if (req.files && req.files.img_principal) {

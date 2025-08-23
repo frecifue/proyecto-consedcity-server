@@ -23,6 +23,10 @@ const DocumentEntity = new EntitySchema({
         doc_orden: {
             type: "int",
         },
+        doc_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         doc_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
