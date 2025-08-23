@@ -12,10 +12,15 @@ const ProjectEntity = new EntitySchema({
         pro_nombre: {
             type: "varchar",
             length: 255,
+            nullable: false,
         },
         pro_descripcion: {
             type: "text",
         },    
+        pro_anio: {
+            type: "int",
+            nullable: false,
+        },
         pro_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",

@@ -69,14 +69,22 @@ async function getProject(req, res) {
 
 
 async function createProject(req, res){
-    let { nombre, descripcion } = req.body;
+    let { nombre, descripcion, anio } = req.body;
     
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
+    anio = parseInt(anio, 10);
+
 
     // Validaciones de campos obligatorios
-    if (!nombre || !descripcion) {
-        return res.status(400).send({ msg: "nombre y descripción obligatoria" });
+    if (!nombre || !descripcion || !anio) {
+        return res.status(400).send({ msg: "nombre, descripción y año son obligatorios" });
+    }
+
+    // Validar año
+    const currentYear = new Date().getFullYear();
+    if (isNaN(anio) || anio < 1900 || anio > currentYear + 1) {
+        return res.status(400).send({ msg: "El año no es válido" });
     }
 
     try {
@@ -89,7 +97,8 @@ async function createProject(req, res){
 
         const newProject = projectRepository.create({
             pro_nombre: nombre,
-            pro_descripcion: descripcion
+            pro_descripcion: descripcion,
+            pro_anio: anio
         });
 
         // Guardar el nuevo proyecto en la base de datos
@@ -105,7 +114,7 @@ async function createProject(req, res){
 
 async function updateProject(req, res) {
     const { proId } = req.params;
-    let { nombre, descripcion } = req.body;
+    let { nombre, descripcion, anio } = req.body;
     
     if (!proId) {
         return res.status(400).send({ msg: "proId no encontrado" });
@@ -113,6 +122,15 @@ async function updateProject(req, res) {
 
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
+    anio = anio ? parseInt(anio, 10) : null;
+
+    // Validar año si viene en la petición
+    if (anio !== null) {
+        const currentYear = new Date().getFullYear();
+        if (isNaN(anio) || anio < 1900 || anio > currentYear + 1) {
+            return res.status(400).send({ msg: "El año no es válido" });
+        }
+    }
 
     try {
         // Verificar si el proyecto existe
@@ -124,13 +142,14 @@ async function updateProject(req, res) {
 
         const existingProject = await projectRepository.findOne({ where: { pro_nombre: nombre } });
 
-        if (existingProject) {
+        if (existingProject && existingProject.pro_id !== parseInt(proId)) {
             return res.status(400).send({ msg: "El nombre ya está registrado" });
         }
 
         // Actualizar los campos del proyecto si se proporcionan
         if (nombre) project.pro_nombre = nombre;
         if (descripcion) project.pro_descripcion = descripcion;
+        if (anio !== null) project.pro_anio = anio;
 
         // Guardar los cambios
         await projectRepository.save(project);
