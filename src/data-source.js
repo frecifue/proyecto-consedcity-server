@@ -13,6 +13,7 @@ const AppDataSource = new DataSource({
     // synchronize: process.env.NODE_ENV !== 'production',
     synchronize: false,
     debug: false,
+    migrations: ["./src/migrations/**/*.js"],
     seeds: ['./migration/seeds/**/*{.ts,.js}'],
     seedTracking: false,
 });

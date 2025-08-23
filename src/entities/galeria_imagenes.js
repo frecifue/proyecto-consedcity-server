@@ -46,6 +46,22 @@ const GaleriaImagenesEntity = new EntitySchema({
             },
             cascade: true,
         },
+        projects: {
+            target: "ProjectEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_imagenes",
+                joinColumn: {
+                    name: "gim_id",
+                    referencedColumnName: "gim_id",
+                },
+                inverseJoinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
+                },
+            },
+            cascade: true,
+        },
     },
 });
 

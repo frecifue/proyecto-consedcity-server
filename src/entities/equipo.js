@@ -33,6 +33,24 @@ const EquipoEntity = new EntitySchema({
             onUpdate: "CURRENT_TIMESTAMP",
         },
     },
+    relations: {
+        projects: {
+            target: "ProjectEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_equipos",
+                joinColumn: {
+                    name: "equ_id",
+                    referencedColumnName: "equ_id",
+                },
+                inverseJoinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
+                },
+            },
+            cascade: true,
+        },
+    },
 });
 
 module.exports = {

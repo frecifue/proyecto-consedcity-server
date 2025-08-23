@@ -53,6 +53,7 @@ const contactRoutes = require("./router/contact");
 const imageGalleryRoutes = require("./router/image_gallery");
 const documentRoutes = require("./router/document");
 const typeUserRoutes = require("./router/type_user");
+const projectRoutes = require("./router/project");
 
 app.use(`/api/${API_VERSION}`, authRoutes);
 app.use(`/api/${API_VERSION}`, userRoutes);
@@ -64,6 +65,7 @@ app.use(`/api/${API_VERSION}`, contactRoutes);
 app.use(`/api/${API_VERSION}`, imageGalleryRoutes);
 app.use(`/api/${API_VERSION}`, documentRoutes);
 app.use(`/api/${API_VERSION}`, typeUserRoutes);
+app.use(`/api/${API_VERSION}`, projectRoutes);
 
 // Ruta raíz
 if (process.env.NODE_ENV !== "production") {
