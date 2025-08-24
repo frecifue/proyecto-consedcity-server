@@ -4,13 +4,37 @@ const fileUtils = require("../utils/fileUtils");
 
 const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
-async function getTeams(req, res){
-    let response = null;
+async function getTeams(req, res) {
+    const { page = "1", limit = "10" } = req.query; // valores por defecto como strings
 
-    response = await teamRepository.find({order: {equ_orden: "ASC"}});
-   
-    return res.status(200).send(response);
+    try {
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
+        if (isNaN(pageNumber) || isNaN(limitNumber)) {
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+        }
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // findAndCount devuelve [resultados, total]
+        const [teams, total] = await teamRepository.findAndCount({
+            skip,
+            take: limitNumber,
+            order: { equ_orden: "ASC" },
+        });
+
+        return res.status(200).send({
+            total,
+            page: pageNumber,
+            totalPages: Math.ceil(total / limitNumber),
+            limit: limitNumber,
+            teams,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(400).send({ msg: "Error al obtener los equipos" });
+    }
 }
 
 async function createTeam(req, res){
