@@ -16,10 +16,23 @@ const ProjectEntity = new EntitySchema({
         },
         pro_descripcion: {
             type: "text",
-        },    
+        },  
+        pro_desc_corta: {
+            type: "varchar",
+            length: 255,
+        },
         pro_anio: {
             type: "int",
             nullable: false,
+        },
+        pro_orden: {
+            type: "int",   
+        },
+        pro_path: {
+            type: "varchar",
+            length: 255,
+            nullable: false,
+            unique: true,   
         },
         pro_created_at: {
             type: "timestamp",

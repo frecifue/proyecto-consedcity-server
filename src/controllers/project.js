@@ -6,6 +6,7 @@ const { DocumentEntity } = require("../entities/documentos");
 const { GaleriaImagenesEntity } = require("../entities/galeria_imagenes"); 
 const { EquipoEntity } = require("../entities/equipo"); 
 const { trimLowerCase } = require("../utils/cleanInput");
+const {validatePath} = require("../utils/validatePath");
 
 const projectRepository = AppDataSource.getRepository(ProjectEntity);
 
@@ -67,64 +68,73 @@ async function getProject(req, res) {
     }
 }
 
+async function createProject(req, res) {
+    let { nombre, descripcion, anio, descripcion_corta, orden, path } = req.body;
 
-async function createProject(req, res){
-    let { nombre, descripcion, anio } = req.body;
-    
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
+    descripcion_corta = (descripcion_corta || "").trim();
+    path = (path || "").trim();
     anio = parseInt(anio, 10);
+    orden = parseInt(orden, 10);
 
-
-    // Validaciones de campos obligatorios
-    if (!nombre || !descripcion || !anio) {
-        return res.status(400).send({ msg: "nombre, descripción y año son obligatorios" });
+    // Validaciones obligatorias
+    if (!nombre || !descripcion || !descripcion_corta || !path || isNaN(anio) || isNaN(orden)) {
+        return res.status(400).send({ 
+            msg: "nombre, descripción, año, descripción corta, orden y path son obligatorios" 
+        });
     }
 
     // Validar año
     const currentYear = new Date().getFullYear();
-    if (isNaN(anio) || anio < 1900 || anio > currentYear + 1) {
+    if (anio < 1900 || anio > currentYear + 1) {
         return res.status(400).send({ msg: "El año no es válido" });
     }
 
+    // Validar formato del path
+    const pathError = validatePath(path);
+    if (pathError) return res.status(400).send({ msg: pathError });
+
     try {
-        // Verificar si el nombre del proyecto ya existe
-        const existingProject = await projectRepository.findOne({ where: { pro_nombre: nombre } });
+        // Verificar si el path ya existe
+        const existingProject = await projectRepository.findOne({ where: { pro_path: path } });
 
         if (existingProject) {
-            return res.status(400).send({ msg: "El nombre ya está registrado" });
+            return res.status(400).send({ msg: "El path ya está registrado" });
         }
 
         const newProject = projectRepository.create({
             pro_nombre: nombre,
             pro_descripcion: descripcion,
-            pro_anio: anio
+            pro_desc_corta: descripcion_corta,
+            pro_anio: anio,
+            pro_orden: orden,
+            pro_path: path
         });
 
-        // Guardar el nuevo proyecto en la base de datos
         await projectRepository.save(newProject);
 
         return res.status(200).send(newProject);
     } catch (error) {
-        console.error(error);  // Agrega un log para ver detalles del error
-        return res.status(400).send({ msg: "Error al crear el proyecto" });
+        console.error(error);
+        return res.status(500).send({ msg: "Error al crear el proyecto" });
     }
-
 }
 
 async function updateProject(req, res) {
     const { proId } = req.params;
-    let { nombre, descripcion, anio } = req.body;
-    
-    if (!proId) {
-        return res.status(400).send({ msg: "proId no encontrado" });
-    }
+    let { nombre, descripcion, anio, descripcion_corta, orden, path } = req.body;
+
+    if (!proId) return res.status(400).send({ msg: "proId no encontrado" });
 
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
+    descripcion_corta = (descripcion_corta || "").trim();
+    path = (path || "").trim();
     anio = anio ? parseInt(anio, 10) : null;
+    orden = orden !== undefined ? parseInt(orden, 10) : null;
 
-    // Validar año si viene en la petición
+    // Validar año si viene
     if (anio !== null) {
         const currentYear = new Date().getFullYear();
         if (isNaN(anio) || anio < 1900 || anio > currentYear + 1) {
@@ -132,35 +142,41 @@ async function updateProject(req, res) {
         }
     }
 
+    // Validar formato del path si viene
+    if (path) {
+        const pathError = validatePath(path);
+        if (pathError) return res.status(400).send({ msg: pathError });
+    }
+
     try {
-        // Verificar si el proyecto existe
         const project = await projectRepository.findOne({ where: { pro_id: proId } });
+        if (!project) return res.status(404).send({ msg: "Proyecto no encontrado" });
 
-        if (!project) {
-            return res.status(404).send({ msg: "Proyecto no encontrado" });
+        // Verificar unicidad del path en BD
+        if (path) {
+            const existingProject = await projectRepository.findOne({ where: { pro_path: path } });
+            if (existingProject && existingProject.pro_id !== parseInt(proId)) {
+                return res.status(400).send({ msg: "El path ya está registrado" });
+            }
         }
 
-        const existingProject = await projectRepository.findOne({ where: { pro_nombre: nombre } });
-
-        if (existingProject && existingProject.pro_id !== parseInt(proId)) {
-            return res.status(400).send({ msg: "El nombre ya está registrado" });
-        }
-
-        // Actualizar los campos del proyecto si se proporcionan
+        // Actualizar campos
         if (nombre) project.pro_nombre = nombre;
         if (descripcion) project.pro_descripcion = descripcion;
+        if (descripcion_corta) project.pro_desc_corta = descripcion_corta;
         if (anio !== null) project.pro_anio = anio;
+        if (orden !== null && !isNaN(orden)) project.pro_orden = orden;
+        if (path) project.pro_path = path;
 
-        // Guardar los cambios
         await projectRepository.save(project);
-
         return res.status(200).send(project);
     } catch (error) {
-
-        console.error(error);  // Agrega un log para ver detalles del error
-        return res.status(400).send({ msg: "Error al actualizar el proyecto" });
+        console.error(error);
+        return res.status(500).send({ msg: "Error al actualizar el proyecto" });
     }
 }
+
+
 
 async function deleteProject(req, res) {
     const { proId } = req.params;

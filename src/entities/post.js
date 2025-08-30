@@ -22,6 +22,8 @@ const PostEntity = new EntitySchema({
         pos_path: {
             type: "varchar",
             length: 255,
+            nullable: false,
+            unique: true,   
         },
         pos_en_home: {          
             type: "boolean",
