@@ -49,11 +49,11 @@ async function getProjects(req, res) {
 }
 
 async function getProject(req, res) {
-    const { proId } = req.params;
+    const { path } = req.params;
     
     try {
         const existingProject = await projectRepository.findOne({ 
-            where: { pro_id: proId },
+            where: { pro_path: path.toLowerCase() },
             relations: ["posts", "documentos", "imagenes", "equipos" ],
         });
 

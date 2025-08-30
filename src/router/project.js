@@ -8,7 +8,7 @@ const api = express.Router();
 api.get("/projects", ProjectController.getProjects);
 
 // Obtener un proyecto específico por su id
-api.get("/project/:proId", ProjectController.getProject);
+api.get("/project/:path", ProjectController.getProject);
 
 // Crear proyect
 api.post("/project", [md_auth.asureAuth, ProjectController.createProject]);
