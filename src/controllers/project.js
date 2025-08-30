@@ -32,7 +32,7 @@ async function getProjects(req, res) {
             skip,
             take: limitNumber,
             order: { pro_created_at: "DESC" },
-            //relations: ["posts", "documentos", "imagenes", "equipos" ],
+            relations: ["posts", "documentos", "imagenes", "equipos" ],
         });
 
         return res.status(200).send({

@@ -26,7 +26,7 @@ async function getPosts(req, res) {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            //relations: ["documentos","imagenes" ],
+            relations: ["documentos","imagenes" ],
         });
 
         return res.status(200).send({
