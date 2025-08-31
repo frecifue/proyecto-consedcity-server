@@ -31,7 +31,7 @@ async function getProjects(req, res) {
         const [projects, total] = await projectRepository.findAndCount({
             skip,
             take: limitNumber,
-            order: { pro_created_at: "DESC" },
+            order: { pro_orden: "ASC" },
             relations: ["posts", "documentos", "imagenes", "equipos" ],
         });
 
