@@ -5,7 +5,7 @@ const fileUtils = require("../utils/fileUtils");
 const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
 async function getTeams(req, res) {
-    const { page = "1", limit = "10" } = req.query; // valores por defecto como strings
+    const { page = "1", limit = "10", en_home } = req.query;
 
     try {
         const pageNumber = parseInt(page, 10);
@@ -17,11 +17,21 @@ async function getTeams(req, res) {
 
         const skip = (pageNumber - 1) * limitNumber;
 
-        // findAndCount devuelve [resultados, total]
+        // Filtro opcional
+        const where = {};
+        if (en_home === "true") {
+            where.equ_en_home = 1;
+        } else if (en_home === "false") {
+            where.equ_en_home = 0;
+        } else if (en_home !== undefined) {
+            return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+        }
+
         const [teams, total] = await teamRepository.findAndCount({
             skip,
             take: limitNumber,
             order: { equ_orden: "ASC" },
+            where: Object.keys(where).length ? where : undefined,
         });
 
         return res.status(200).send({
@@ -36,6 +46,8 @@ async function getTeams(req, res) {
         return res.status(400).send({ msg: "Error al obtener los equipos" });
     }
 }
+
+
 
 async function createTeam(req, res){
     let { nombre, descripcion, orden, en_home } = req.body;

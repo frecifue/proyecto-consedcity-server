@@ -11,22 +11,37 @@ const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getPosts(req, res) {
-    const { page = "1", limit = "10", relations = "true" } = req.query;
+    const { page = "1", limit = "10", relations, en_home } = req.query;
 
     try {
         const pageNumber = parseInt(page, 10);
         const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser números válidos" });
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
-        // Validar relations solo como "true" o "false"
-        if (relations !== "true" && relations !== "false") {
-            return res.status(400).send({ msg: "El parámetro 'relations' debe ser 'true' o 'false'" });
+        // Validar relations solo si viene
+        let enableRelations;
+        if (relations !== undefined) {
+            if (relations !== "true" && relations !== "false") {
+                return res.status(400).send({ msg: "El parámetro 'relations' debe ser 'true' o 'false'" });
+            }
+            enableRelations = relations === "true";
         }
 
-        const enableRelations = relations === "true";
+        // Validar en_home solo si viene
+        const where = {};
+        if (en_home !== undefined) {
+            if (en_home === "true") {
+                where.pos_en_home = 1;
+            } else if (en_home === "false") {
+                where.pos_en_home = 0;
+            } else {
+                return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+            }
+        }
+
         const skip = (pageNumber - 1) * limitNumber;
 
         const queryOptions = {
@@ -37,6 +52,10 @@ async function getPosts(req, res) {
 
         if (enableRelations) {
             queryOptions.relations = ["documentos", "imagenes"];
+        }
+
+        if (Object.keys(where).length) {
+            queryOptions.where = where;
         }
 
         const [posts, total] = await postRepository.findAndCount(queryOptions);

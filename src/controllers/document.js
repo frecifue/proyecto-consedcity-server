@@ -5,23 +5,41 @@ const fileUtils = require("../utils/fileUtils");
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getDocuments(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    
+    const { page = "1", limit = "10", en_home } = req.query; // en_home opcional
+
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a n?mero
-        const limitNumber = parseInt(limit, 10); // Convertir a n?mero
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los par?metros 'page' y 'limit' deben ser n?meros v?lidos" });
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // C?lculo correcto
+        // Validar en_home solo si viene
+        const where = {};
+        if (en_home !== undefined) {
+            if (en_home === "true") {
+                where.doc_en_home = 1;
+            } else if (en_home === "false") {
+                where.doc_en_home = 0;
+            } else {
+                return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+            }
+        }
 
-        const [documents, total] = await documentRepository.findAndCount({
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const queryOptions = {
             skip,
             take: limitNumber,
             order: { doc_orden: "ASC" },
-        });
+        };
+
+        if (Object.keys(where).length) {
+            queryOptions.where = where;
+        }
+
+        const [documents, total] = await documentRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
