@@ -17,23 +17,35 @@ const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
 
 async function getProjects(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
+    const { page = "1", limit = "10", relations = "true" } = req.query;
 
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a numero
-        const limitNumber = parseInt(limit, 10); // Convertir a numero
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
             return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Calculo correcto
-        const [projects, total] = await projectRepository.findAndCount({
+        // Validar relations solo como "true" o "false"
+        if (relations !== "true" && relations !== "false") {
+            return res.status(400).send({ msg: "El parámetro 'relations' debe ser 'true' o 'false'" });
+        }
+
+        const skip = (pageNumber - 1) * limitNumber;
+        const enableRelations = relations === "true";
+
+        const queryOptions = {
             skip,
             take: limitNumber,
             order: { pro_orden: "ASC" },
-            relations: ["posts", "documentos", "imagenes", "equipos" ],
-        });
+        };
+
+        if (enableRelations) {
+            queryOptions.relations = ["posts", "documentos", "imagenes", "equipos"];
+        }
+
+        const [projects, total] = await projectRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
@@ -47,6 +59,7 @@ async function getProjects(req, res) {
         return res.status(400).send({ msg: "Error al obtener el proyecto" });
     }
 }
+
 
 async function getProject(req, res) {
     const { path } = req.params;

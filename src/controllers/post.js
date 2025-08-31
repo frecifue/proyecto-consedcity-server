@@ -11,23 +11,35 @@ const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getPosts(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
+    const { page = "1", limit = "10", relations = "true" } = req.query;
 
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a numero
-        const limitNumber = parseInt(limit, 10); // Convertir a numero
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
             return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Calculo correcto
-        const [posts, total] = await postRepository.findAndCount({
+        // Validar relations solo como "true" o "false"
+        if (relations !== "true" && relations !== "false") {
+            return res.status(400).send({ msg: "El parámetro 'relations' debe ser 'true' o 'false'" });
+        }
+
+        const enableRelations = relations === "true";
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const queryOptions = {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            relations: ["documentos","imagenes" ],
-        });
+        };
+
+        if (enableRelations) {
+            queryOptions.relations = ["documentos", "imagenes"];
+        }
+
+        const [posts, total] = await postRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
