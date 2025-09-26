@@ -11,23 +11,54 @@ const imgGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getPosts(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
+    const { page = "1", limit = "10", relations, en_home } = req.query;
 
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a numero
-        const limitNumber = parseInt(limit, 10); // Convertir a numero
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los parametros 'page' y 'limit' deben ser números válidos" });
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // Calculo correcto
-        const [posts, total] = await postRepository.findAndCount({
+        // Validar relations solo si viene
+        let enableRelations;
+        if (relations !== undefined) {
+            if (relations !== "true" && relations !== "false") {
+                return res.status(400).send({ msg: "El parámetro 'relations' debe ser 'true' o 'false'" });
+            }
+            enableRelations = relations === "true";
+        }
+
+        // Validar en_home solo si viene
+        const where = {};
+        if (en_home !== undefined) {
+            if (en_home === "true") {
+                where.pos_en_home = 1;
+            } else if (en_home === "false") {
+                where.pos_en_home = 0;
+            } else {
+                return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+            }
+        }
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const queryOptions = {
             skip,
             take: limitNumber,
             order: { pos_created_at: "DESC" },
-            relations: ["documentos","imagenes" ],
-        });
+        };
+
+        if (enableRelations) {
+            queryOptions.relations = ["documentos", "imagenes"];
+        }
+
+        if (Object.keys(where).length) {
+            queryOptions.where = where;
+        }
+
+        const [posts, total] = await postRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
@@ -64,11 +95,23 @@ async function getPost(req, res) {
 
 
 async function createPost(req, res){
-    let { titulo, contenido, path_post } = req.body;
+    let { titulo, contenido, path_post, en_home } = req.body;
     
     titulo = (titulo || "").trim();
     contenido = (contenido || "").trim();
     path_post = trimLowerCase(path_post);
+
+    // Validación de en_home
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = parseInt(en_home);
+        if (![0,1].includes(en_home)) {
+            en_home = 0;
+        }
+    }
 
     // Validaciones de campos obligatorios
     if (!titulo || !req.files.img_principal || !contenido || !path_post) {
@@ -96,7 +139,8 @@ async function createPost(req, res){
         const newPost = postRepository.create({
             pos_titulo: titulo,
             pos_contenido: contenido,
-            pos_path: path_post
+            pos_path: path_post,
+            pos_en_home: en_home
         });
 
         newPost.pos_img_principal = fileUtils.generateFilePathWithDate(req.files.img_principal, "posts");
@@ -119,7 +163,7 @@ async function createPost(req, res){
 
 async function updatePost(req, res) {
     const { posId } = req.params;
-    let { titulo, contenido, path_post } = req.body;
+    let { titulo, contenido, path_post, en_home } = req.body;
     
     if (!posId) {
 
@@ -133,6 +177,18 @@ async function updatePost(req, res) {
     titulo = (titulo || "").trim();
     contenido = (contenido || "").trim();
     path_post = trimLowerCase(path_post);
+
+    // --- NUEVO: Validación y normalización de en_home ---
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "string") {
+        en_home = en_home === "1" || en_home.toLowerCase() === "true" ? 1 : 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = en_home ? 1 : 0;
+    }
+    // --- FIN NUEVO ---
 
     try {
         // Verificar si el post existe
@@ -165,6 +221,7 @@ async function updatePost(req, res) {
         // Actualizar los campos del post si se proporcionan
         if (titulo) post.pos_titulo = titulo;
         if (contenido) post.pos_contenido = contenido;
+        post.pos_en_home = en_home; // <-- agregado en_home
 
         // Verificar si el post tiene un img y eliminar el archivo
         if (req.files && req.files.img_principal) {

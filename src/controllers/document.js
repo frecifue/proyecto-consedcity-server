@@ -5,23 +5,41 @@ const fileUtils = require("../utils/fileUtils");
 const documentRepository = AppDataSource.getRepository(DocumentEntity);
 
 async function getDocuments(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    
+    const { page = "1", limit = "10", en_home } = req.query; // en_home opcional
+
     try {
-        const pageNumber = parseInt(page, 10); // Convertir a n?mero
-        const limitNumber = parseInt(limit, 10); // Convertir a n?mero
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
-            return res.status(400).send({ msg: "Los par?metros 'page' y 'limit' deben ser n?meros v?lidos" });
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; // C?lculo correcto
+        // Validar en_home solo si viene
+        const where = {};
+        if (en_home !== undefined) {
+            if (en_home === "true") {
+                where.doc_en_home = 1;
+            } else if (en_home === "false") {
+                where.doc_en_home = 0;
+            } else {
+                return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+            }
+        }
 
-        const [documents, total] = await documentRepository.findAndCount({
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const queryOptions = {
             skip,
             take: limitNumber,
             order: { doc_orden: "ASC" },
-        });
+        };
+
+        if (Object.keys(where).length) {
+            queryOptions.where = where;
+        }
+
+        const [documents, total] = await documentRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
@@ -37,11 +55,23 @@ async function getDocuments(req, res) {
 }
 
 async function createDocument(req, res) {
-    let { titulo, descripcion, orden } = req.body;
+    let { titulo, descripcion, orden, en_home } = req.body;
 
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
     orden = parseInt(orden);
+
+    // Validación de en_home
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = parseInt(en_home);
+        if (![0,1].includes(en_home)) {
+            en_home = 0;
+        }
+    }
 
     // Validaciones de campos obligatorios
     if (!titulo || !req.files?.documento || isNaN(orden)) {
@@ -58,13 +88,12 @@ async function createDocument(req, res) {
         const newDocument = documentRepository.create({
             doc_titulo: titulo,
             doc_descripcion: descripcion,
-            doc_orden: orden
+            doc_orden: orden,
+            doc_en_home: en_home
         });
 
-        
         newDocument.doc_documento = fileUtils.generateFilePathWithDate(req.files.documento, "documentos"); // Ruta relativa tipo uploads/documents/2025/04/uuid.pdf
         
-
         await documentRepository.save(newDocument);
 
         return res.status(200).send(newDocument);
@@ -81,7 +110,7 @@ async function createDocument(req, res) {
 
 async function updateDocument(req, res) {
     const { docId } = req.params;
-    let { titulo, descripcion, orden } = req.body;
+    let { titulo, descripcion, orden, en_home } = req.body;
 
     if (!docId) {
 
@@ -95,6 +124,18 @@ async function updateDocument(req, res) {
     titulo = (titulo || "").trim();
     descripcion = (descripcion || "").trim();
     orden = parseInt(orden);
+
+    // --- NUEVO: Validación y normalización de en_home ---
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "string") {
+        en_home = en_home === "1" || en_home.toLowerCase() === "true" ? 1 : 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = en_home ? 1 : 0;
+    }
+    // --- FIN NUEVO ---
 
     try {
         const document = await documentRepository.findOne({ where: { doc_id: docId } });
@@ -112,6 +153,7 @@ async function updateDocument(req, res) {
         if (titulo) document.doc_titulo = titulo;
         if (descripcion) document.doc_descripcion = descripcion;
         if (orden) document.doc_orden = orden;
+        document.doc_en_home = en_home; // <-- agregado en_home
 
         // Si se proporciona un nuevo archivo
         if (req.files && req.files.documento) {

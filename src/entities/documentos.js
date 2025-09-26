@@ -23,6 +23,10 @@ const DocumentEntity = new EntitySchema({
         doc_orden: {
             type: "int",
         },
+        doc_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         doc_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
@@ -46,6 +50,22 @@ const DocumentEntity = new EntitySchema({
                 inverseJoinColumn: {
                     name: "pos_id",
                     referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
+        },
+        projects: {
+            target: "ProjectEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_documentos",
+                joinColumn: {
+                    name: "doc_id",
+                    referencedColumnName: "doc_id",
+                },
+                inverseJoinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
                 },
             },
             cascade: true,

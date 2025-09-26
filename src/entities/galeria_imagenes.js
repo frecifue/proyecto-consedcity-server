@@ -19,6 +19,10 @@ const GaleriaImagenesEntity = new EntitySchema({
         gim_orden: {
             type: "int",
         },
+        gim_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         gim_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
@@ -42,6 +46,22 @@ const GaleriaImagenesEntity = new EntitySchema({
                 inverseJoinColumn: {
                     name: "pos_id",
                     referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
+        },
+        projects: {
+            target: "ProjectEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_imagenes",
+                joinColumn: {
+                    name: "gim_id",
+                    referencedColumnName: "gim_id",
+                },
+                inverseJoinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
                 },
             },
             cascade: true,

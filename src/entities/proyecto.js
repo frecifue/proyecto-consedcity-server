@@ -1,53 +1,74 @@
 const { EntitySchema } = require("typeorm");
 
-const PostEntity = new EntitySchema({
-    name: "PostEntity",
-    tableName: "posts",
+const ProjectEntity = new EntitySchema({
+    name: "ProjectEntity",
+    tableName: "proyecto",
     columns: {
-        pos_id: {
+        pro_id: {
             type: "int",
             primary: true,
             generated: true,
         },
-        pos_titulo: {
+        pro_nombre: {
+            type: "varchar",
+            length: 255,
+            nullable: false,
+        },
+        pro_descripcion: {
+            type: "text",
+        },  
+        pro_desc_corta: {
             type: "varchar",
             length: 255,
         },
-        pos_img_principal: {
-            type: "text",
+        pro_anio: {
+            type: "int",
+            nullable: false,
         },
-        pos_contenido: {
-            type: "text",
+        pro_orden: {
+            type: "int",   
         },
-        pos_path: {
+        pro_path: {
             type: "varchar",
             length: 255,
             nullable: false,
             unique: true,   
         },
-        pos_en_home: {          
-            type: "boolean",
-            default: false,     
-        },
-        pos_created_at: {
+        pro_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
         },
-        pos_updated_at: {
+        pro_updated_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
         },
     },
     relations: {
+        posts: {
+            target: "PostEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_posts",
+                joinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
+                },
+                inverseJoinColumn: {
+                    name: "pos_id",
+                    referencedColumnName: "pos_id",
+                },
+            },
+            cascade: true,
+        },
         documentos: {
             target: "DocumentEntity",
             type: "many-to-many",
             joinTable: {
-                name: "posts_documentos",
+                name: "proyectos_documentos",
                 joinColumn: {
-                    name: "pos_id",
-                    referencedColumnName: "pos_id",
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
                 },
                 inverseJoinColumn: {
                     name: "doc_id",
@@ -60,10 +81,10 @@ const PostEntity = new EntitySchema({
             target: "GaleriaImagenesEntity",
             type: "many-to-many",
             joinTable: {
-                name: "posts_imagenes",
+                name: "proyectos_imagenes",
                 joinColumn: {
-                    name: "pos_id",
-                    referencedColumnName: "pos_id",
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
                 },
                 inverseJoinColumn: {
                     name: "gim_id",
@@ -72,25 +93,25 @@ const PostEntity = new EntitySchema({
             },
           cascade: true,
         },
-        projects: {
-            target: "ProjectEntity",
+        equipos: {
+            target: "EquipoEntity",
             type: "many-to-many",
             joinTable: {
-                name: "proyectos_posts",
+                name: "proyectos_equipos",
                 joinColumn: {
-                    name: "pos_id",
-                    referencedColumnName: "pos_id",
-                },
-                inverseJoinColumn: {
                     name: "pro_id",
                     referencedColumnName: "pro_id",
                 },
+                inverseJoinColumn: {
+                    name: "equ_id",
+                    referencedColumnName: "equ_id",
+                },
             },
-            cascade: true,
+          cascade: true,
         },
     },
 });
 
 module.exports = {
-    PostEntity
+    ProjectEntity
 };

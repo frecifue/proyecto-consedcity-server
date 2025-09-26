@@ -4,21 +4,69 @@ const fileUtils = require("../utils/fileUtils");
 
 const teamRepository = AppDataSource.getRepository(EquipoEntity);
 
-async function getTeams(req, res){
-    let response = null;
+async function getTeams(req, res) {
+    const { page = "1", limit = "10", en_home } = req.query;
 
-    response = await teamRepository.find({order: {equ_orden: "ASC"}});
-   
-    return res.status(200).send(response);
+    try {
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
+        if (isNaN(pageNumber) || isNaN(limitNumber)) {
+            return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
+        }
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // Filtro opcional
+        const where = {};
+        if (en_home === "true") {
+            where.equ_en_home = 1;
+        } else if (en_home === "false") {
+            where.equ_en_home = 0;
+        } else if (en_home !== undefined) {
+            return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+        }
+
+        const [teams, total] = await teamRepository.findAndCount({
+            skip,
+            take: limitNumber,
+            order: { equ_orden: "ASC" },
+            where: Object.keys(where).length ? where : undefined,
+        });
+
+        return res.status(200).send({
+            total,
+            page: pageNumber,
+            totalPages: Math.ceil(total / limitNumber),
+            limit: limitNumber,
+            teams,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(400).send({ msg: "Error al obtener los equipos" });
+    }
 }
 
+
+
 async function createTeam(req, res){
-    let { nombre, descripcion, orden } = req.body;
+    let { nombre, descripcion, orden, en_home } = req.body;
 
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
     orden = parseInt(orden);
+
+    // Validación de en_home
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = parseInt(en_home);
+        if (![0,1].includes(en_home)) {
+            en_home = 0;
+        }
+    }
 
     // Validaciones de campos obligatorios
     if(!nombre || !req.files.foto_perfil || !descripcion || isNaN(orden)){
@@ -33,7 +81,8 @@ async function createTeam(req, res){
         const newTeam = teamRepository.create({
             equ_nombre: nombre,
             equ_descripcion: descripcion,
-            equ_orden: orden
+            equ_orden: orden,
+            equ_en_home: en_home
         });
 
         newTeam.equ_foto_perfil = fileUtils.generateFilePath(req.files.foto_perfil, "team/foto_perfil");
@@ -54,7 +103,7 @@ async function createTeam(req, res){
 
 async function updateTeam(req, res) {
     const { equId } = req.params;
-    let { nombre, descripcion, orden } = req.body;
+    let { nombre, descripcion, orden, en_home } = req.body;
     
     if (!equId) {
         if (req.files?.foto_perfil) {
@@ -66,6 +115,18 @@ async function updateTeam(req, res) {
     nombre = (nombre || "").trim();
     descripcion = (descripcion || "").trim();
     orden = parseInt(orden);
+
+    // --- NUEVO: Validación y normalización de en_home ---
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "string") {
+        en_home = en_home === "1" || en_home.toLowerCase() === "true" ? 1 : 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = en_home ? 1 : 0;
+    }
+    // --- FIN NUEVO ---
 
     try {
         // Verificar si el equipo existe
@@ -82,6 +143,7 @@ async function updateTeam(req, res) {
         if (nombre) equipo.equ_nombre = nombre;
         if (descripcion) equipo.equ_descripcion = descripcion;
         if (!isNaN(orden)) equipo.equ_orden = orden;
+        equipo.equ_en_home = en_home;
 
         // Si se proporciona un nuevo avatar, actualizarlo
         if (req.files && req.files.foto_perfil) {

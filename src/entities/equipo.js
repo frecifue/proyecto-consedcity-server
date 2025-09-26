@@ -23,6 +23,10 @@ const EquipoEntity = new EntitySchema({
         equ_orden: {
             type: "int",
         },
+        equ_en_home: {          
+            type: "boolean",
+            default: false,     
+        },
         equ_created_at: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
@@ -31,6 +35,24 @@ const EquipoEntity = new EntitySchema({
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
+    },
+    relations: {
+        projects: {
+            target: "ProjectEntity",
+            type: "many-to-many",
+            joinTable: {
+                name: "proyectos_equipos",
+                joinColumn: {
+                    name: "equ_id",
+                    referencedColumnName: "equ_id",
+                },
+                inverseJoinColumn: {
+                    name: "pro_id",
+                    referencedColumnName: "pro_id",
+                },
+            },
+            cascade: true,
         },
     },
 });

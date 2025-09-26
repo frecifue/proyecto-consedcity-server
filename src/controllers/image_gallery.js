@@ -6,23 +6,41 @@ const fileUtils = require("../utils/fileUtils");
 const imageGalleryRepository = AppDataSource.getRepository(GaleriaImagenesEntity);
 
 async function getImagesGallery(req, res) {
-    const { page = "1", limit = "10" } = req.query; // Asegurar valores por defecto como strings
-    
+    const { page = "1", limit = "10", en_home } = req.query; // en_home opcional
+
     try {
-        const pageNumber = parseInt(page, 10); 
-        const limitNumber = parseInt(limit, 10); 
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
 
         if (isNaN(pageNumber) || isNaN(limitNumber)) {
             return res.status(400).send({ msg: "Los parámetros 'page' y 'limit' deben ser números válidos" });
         }
 
-        const skip = (pageNumber - 1) * limitNumber; 
+        // Validar en_home solo si viene
+        const where = {};
+        if (en_home !== undefined) {
+            if (en_home === "true") {
+                where.gim_en_home = 1;
+            } else if (en_home === "false") {
+                where.gim_en_home = 0;
+            } else {
+                return res.status(400).send({ msg: "El parámetro 'en_home' debe ser 'true' o 'false'" });
+            }
+        }
 
-        const [images, total] = await imageGalleryRepository.findAndCount({
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const queryOptions = {
             skip,
             take: limitNumber,
-            order: { gim_orden: "ASC" }
-        });
+            order: { gim_orden: "ASC" },
+        };
+
+        if (Object.keys(where).length) {
+            queryOptions.where = where;
+        }
+
+        const [images, total] = await imageGalleryRepository.findAndCount(queryOptions);
 
         return res.status(200).send({
             total,
@@ -33,9 +51,10 @@ async function getImagesGallery(req, res) {
         });
     } catch (error) {
         console.error(error);
-        return res.status(400).send({ msg: "Error al obtener la galeria de imagenes" });
+        return res.status(400).send({ msg: "Error al obtener la galería de imágenes" });
     }
 }
+
 
 async function getImageGallery(req, res){
 
@@ -45,10 +64,22 @@ async function getImageGallery(req, res){
 }
 
 async function createImageGallery(req, res){
-    let { nombre, orden } = req.body;
+    let { nombre, orden, en_home } = req.body;
 
     nombre = trimLowerCase(nombre)
     orden = parseInt(orden);
+
+    // Validación de en_home
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = parseInt(en_home);
+        if (![0,1].includes(en_home)) {
+            en_home = 0;
+        }
+    }
 
     // Validaciones de campos obligatorios
     if (!nombre || !req.files.imagen || isNaN(orden)) {
@@ -65,6 +96,7 @@ async function createImageGallery(req, res){
         const newImageGallery = imageGalleryRepository.create({
             gim_nombre: nombre,
             gim_orden: orden,
+            gim_en_home: en_home
         });
 
         newImageGallery.gim_imagen = fileUtils.generateFilePathWithDate(req.files.imagen, "galeria_imagenes");
@@ -86,7 +118,7 @@ async function createImageGallery(req, res){
 
 async function updateImageGallery(req, res) {
     const { gimId } = req.params;
-    let { nombre, orden } = req.body;
+    let { nombre, orden, en_home } = req.body;
     
     if (!gimId) {
 
@@ -99,6 +131,18 @@ async function updateImageGallery(req, res) {
 
     nombre = trimLowerCase(nombre)
     orden = parseInt(orden);
+
+    // --- NUEVO: Validación y normalización de en_home ---
+    if (en_home === undefined || en_home === null) {
+        en_home = 0;
+    } else if (typeof en_home === "string") {
+        en_home = en_home === "1" || en_home.toLowerCase() === "true" ? 1 : 0;
+    } else if (typeof en_home === "boolean") {
+        en_home = en_home ? 1 : 0;
+    } else {
+        en_home = en_home ? 1 : 0;
+    }
+    // --- FIN NUEVO ---
 
     try {
         // Verificar si la imagen existe
@@ -116,6 +160,7 @@ async function updateImageGallery(req, res) {
         // Actualizar los campos de la imagen si se proporcionan
         if (nombre) imageGallery.gim_nombre = nombre.toLowerCase();
         if (!isNaN(orden)) imageGallery.gim_orden = orden;
+        imageGallery.gim_en_home = en_home; // <-- agregado en_home
 
         // Si se proporciona una nueva imagen, actualizarlo
         if (req.files && req.files.imagen) {
