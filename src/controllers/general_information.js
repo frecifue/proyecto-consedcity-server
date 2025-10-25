@@ -12,7 +12,7 @@ async function getGeneralInformation(req, res){
 }
 
 async function createGeneralInformation(req, res){
-    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
+    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion, videojuegos } = req.body;
 
     quienes_somos = (quienes_somos || "").trim();
     mision = (mision || "").trim();
@@ -21,6 +21,7 @@ async function createGeneralInformation(req, res){
     difusion = (difusion || "").trim();
     formacion = (formacion || "").trim();
     investigacion = (investigacion || "").trim();
+    videojuegos = (videojuegos || "").trim();
 
 
     try {
@@ -35,7 +36,8 @@ async function createGeneralInformation(req, res){
             existingGeneralInfo.ing_nuestro_trabajo = nuestro_trabajo || existingGeneralInfo.ing_nuestro_trabajo;
             existingGeneralInfo.ing_nuestro_trabajo_difusion = difusion || existingGeneralInfo.ing_nuestro_trabajo_difusion;
             existingGeneralInfo.ing_nuestro_trabajo_formacion = formacion || existingGeneralInfo.ing_nuestro_trabajo_formacion;
-            existingGeneralInfo.ing_nuestro_trabajo_investigacion = investigacion ?? existingGeneralInfo.ing_nuestro_trabajo_investigacion; // Para booleanos
+            existingGeneralInfo.ing_nuestro_trabajo_investigacion = investigacion ?? existingGeneralInfo.ing_nuestro_trabajo_investigacion;
+            existingGeneralInfo.ing_nuestro_trabajo_creacion_videojuegos = videojuegos ?? existingGeneralInfo.ing_nuestro_trabajo_creacion_videojuegos;
 
             await generalInfoRepository.save(existingGeneralInfo);
 
@@ -51,6 +53,7 @@ async function createGeneralInformation(req, res){
             ing_nuestro_trabajo_difusion: difusion,
             ing_nuestro_trabajo_formacion: formacion,
             ing_nuestro_trabajo_investigacion: investigacion,
+            ing_nuestro_trabajo_creacion_videojuegos : videojuegos
         });
 
         await generalInfoRepository.save(newGeneralInfo);
@@ -66,7 +69,7 @@ async function createGeneralInformation(req, res){
 
 async function updateGeneralInformation(req, res) {
     const { ingId } = req.params;
-    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion } = req.body;
+    let { quienes_somos, mision, vision, nuestro_trabajo, difusion, formacion, investigacion, videojuegos } = req.body;
     
     if (!ingId) {
         return res.status(400).send({ msg: "ingId no encontrado" });
@@ -79,6 +82,7 @@ async function updateGeneralInformation(req, res) {
     difusion = (difusion || "").trim();
     formacion = (formacion || "").trim();
     investigacion = (investigacion || "").trim();
+    videojuegos = (videojuegos || "").trim();
 
     try {
         // Verificar si existe
@@ -96,6 +100,7 @@ async function updateGeneralInformation(req, res) {
         if (difusion) generalInfo.ing_nuestro_trabajo_difusion = difusion;
         if (formacion) generalInfo.ing_nuestro_trabajo_formacion = formacion;
         if (investigacion) generalInfo.ing_nuestro_trabajo_investigacion = investigacion;
+        if (videojuegos) generalInfo.ing_nuestro_trabajo_creacion_videojuegos = videojuegos;
 
 
         // Guardar los cambios

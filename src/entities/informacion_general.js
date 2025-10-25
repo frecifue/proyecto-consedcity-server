@@ -11,31 +11,35 @@ const InformacionGeneralEntity = new EntitySchema({
         },
         ing_quienes_somos: {
             type: "varchar",
-            length: 500,
+            length: 2000,
         },
         ing_mision: {
             type: "varchar",
-            length: 500,
+            length: 1000,
         },
         ing_vision: {
             type: "varchar",
-            length: 500,
+            length: 1000,
         },
         ing_nuestro_trabajo: {
             type: "varchar",
-            length: 500,
+            length: 1000,
         },
         ing_nuestro_trabajo_difusion: {
             type: "varchar",
-            length: 500,
+            length: 1000,
         },
         ing_nuestro_trabajo_formacion: {
             type: "varchar",
-            length: 500,
+            length: 1000,
         },
         ing_nuestro_trabajo_investigacion: {
             type: "varchar",
-            length: 500,
+            length: 1000,
+        },
+        ing_nuestro_trabajo_creacion_videojuegos: {
+            type: "varchar",
+            length: 1000,
         },
         ing_created_at: {
             type: "timestamp",
